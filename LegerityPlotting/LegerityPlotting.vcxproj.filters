@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
+    <Text Include="项目描述.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -30,12 +31,18 @@
     <ClInclude Include="LegerityPlotting.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="utilities.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="LegerityPlotting.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -49,6 +56,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="LegerityPlotting.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="datatype.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

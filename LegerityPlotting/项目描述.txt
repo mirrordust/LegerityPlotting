@@ -1,0 +1,27 @@
+Could refer to the following online plotting tools
+，http://fooplot.com/
+，http://graphsketch.com/
+，http://graph-plotter.cours-de-math.eu/
+
+Requirements:
+1. No MFC or other third party GUI libraries allowed, 
+   all source code must be using Win32 API directly, or use your own encapsulation.
+2. It is recommended to use C++ to encapsulate your own data structure. 
+   However, standard C++ library elements, such as vector, list are also allowed.
+3. No third party controls, such as MSGrid, Crystal Report are allowed.
+
+Ranking:
+，Basic functionality [80%]
+	1. Plot display: X-axis, Y-axis, grid, tick marks and numbers,
+	2. Plotting of the simplest math equation. E.g., f(x) = 2*x, f(x) = -5*x^2
+	3. Plotting of the simplest function. E.g., f(x) = sin(x), f(x) = log(x)
+	4. Display multiple lines with different colors.
+	5. Adjustable background color, line color, tick distance, grid spacing, etc.
+	6. Save plot as bitmap (can be opened by other image viewers).
+，Advanced functionality [20%]
+	1. Zoom in / Zoom out and page scrolling
+	2. Data source from file (in .csv format)
+，Extra functionality:
+	1. Save as other file formats (png, pdf, svg´)
+	2. Complicated math equation: f(x) = x^3 + 3*x^2/(5x+4) + sin(x)/(2*x^2)	
+	3. Bar chart, pie chart´

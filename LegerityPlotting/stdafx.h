@@ -19,3 +19,12 @@
 
 
 // TODO:  在此处引用程序需要的其他头文件
+#include "Resource.h"
+#include <string>
+#include <map>
+#include <queue>
+#include <stdio.h>
+#include <math.h>
+#include <stack>
+#include <iostream>
+#include "utilities.h"

@@ -139,12 +139,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
+    <Text Include="项目描述.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LegerityPlotting.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LegerityPlotting.cpp" />
@@ -154,11 +156,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LegerityPlotting.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="datatype.png" />
     <Image Include="LegerityPlotting.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
