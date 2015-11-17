@@ -4,30 +4,53 @@
 
 using namespace std;
 
-void plot(HDC hdc, COLORREF color, string expression, POINT origin,
+void plot(HDC hdc, string expression, POINT origin,
 	float XrangeLeft, float XrangeRight, float XplottingScale, float YplottingScale)
 {
 	queue<string> rpn = postfix(expression);
-	FLOAT x, y;
-	for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 0.1) // x每增长0.01绘制1个点
+	
+	INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
+	POINT* points = new POINT[pn];
+	int pc = 0;
+
+	for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 1) // x每增长0.01绘制1个点
 	{
-		x = origin.x + i;
+		LONG x = origin.x + i;
 
 		/*AllocConsole();
 		freopen("CONOUT$", "w", stdout);
 		printf("%f", i / XplottingScale);
 		FreeConsole();*/
-
-		y = origin.y - (FLOAT)calculate(rpn, i / XplottingScale) * YplottingScale;
+		
+		calres result = calculate(rpn, i / XplottingScale);
+		
+		if (result.valid)
+		{
+			LONG y = origin.y - result.answer * YplottingScale;
+			points[pc].x = x;
+			points[pc].y = y;
+			pc++;
+		}
 
 		//y = origin.y - tan(i / XplottingScale) * YplottingScale;
 		// 在 (x,y) 处绘制一个点
-		SetPixel(hdc, x, y, RGB(250, 0, 0));
+		//SetPixel(hdc, x, y, RGB(250, 0, 0));
 	}
+	//PolylineTo画图
+	int re = Polyline(hdc, points, pc);
+	if (re == 0)
+	{
+		TCHAR buf[1000];
+		::wsprintf(buf, L"=======> %d和%d", points[10].x,points[10].y);
+		TextOut(hdc, 300, 300, buf, ::wcslen(buf));
+	}
+
 }
 
-double calculate(queue<string> rpn, float x)
+calres calculate(queue<string> rpn, float x)
 {
+	calres result;
+	result.valid = true;
 	stack<double> st_result;
 	int j = rpn.size();
 	while (j--)
@@ -80,6 +103,7 @@ double calculate(queue<string> rpn, float x)
 				if (right == 0)
 				{
 					//报错
+					result.valid = false;
 					break;
 				}
 				double answer = left / right;
@@ -104,9 +128,9 @@ double calculate(queue<string> rpn, float x)
 		}
 	}
 
-	double st = st_result.top();
+	result.answer = st_result.top();
 	st_result.pop();
-	return st;
+	return result;
 }
 
 //将输入的式子转为RPN
