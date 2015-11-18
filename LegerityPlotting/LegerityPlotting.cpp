@@ -909,7 +909,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}*/
 		HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
 		hpenOld = (HPEN)::SelectObject(hdc, hpen4);
-		plot(hdc, L"x+3", origin, 
+		plot(hdc, "x^2+3.5*x", origin, 
 			XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
 		
 		DeleteObject(hpen4);

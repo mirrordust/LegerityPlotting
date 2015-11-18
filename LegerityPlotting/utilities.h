@@ -10,25 +10,15 @@ struct calres
 	bool valid;
 };
 
-struct valsym
-{
-	INT type;// 0 ³£Êý ;1 x ;-1 ÔËËã·û
-	double val;
-	TCHAR sym[7];
-};
 
-void plot(HDC hdc, TCHAR* expression, POINT origin,
+void plot(HDC hdc, string expression, POINT origin,
 	float XrangeLeft, float XrangeRight, float XplottingScale, float YplottingScale);
 
-queue<valsym> postfix(TCHAR* expression);
+queue<string> postfix(string expression);
 
-int judgeX(TCHAR ch);
+int judgeX(char ch);
 
-int judgeBuf(TCHAR* buf);
-
-calres calculate(queue<valsym> rpn, float x);
-
-TCHAR** tokenizer(TCHAR* expression);
+calres calculate(queue<string> rpn, float x);
 
 /*TCHAR buf[1000];
 ::wsprintf(buf, L"=======> %d", CW_USEDEFAULT);
