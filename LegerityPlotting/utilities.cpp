@@ -4,11 +4,11 @@
 
 using namespace std;
 
-void plot(HDC hdc, string expression, POINT origin,
+void plot(HDC hdc, TCHAR* expression, POINT origin,
 	float XrangeLeft, float XrangeRight, float XplottingScale, float YplottingScale)
 {
-	queue<string> rpn = postfix(expression);
-	
+	queue<valsym> rpn = postfix(expression);
+
 	INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
 	POINT* points = new POINT[pn];
 	int pc = 0;
@@ -21,9 +21,9 @@ void plot(HDC hdc, string expression, POINT origin,
 		freopen("CONOUT$", "w", stdout);
 		printf("%f", i / XplottingScale);
 		FreeConsole();*/
-		
+
 		calres result = calculate(rpn, i / XplottingScale);
-		
+
 		if (result.valid)
 		{
 			LONG y = origin.y - result.answer * YplottingScale;
@@ -41,13 +41,13 @@ void plot(HDC hdc, string expression, POINT origin,
 	if (re == 0)
 	{
 		TCHAR buf[1000];
-		::wsprintf(buf, L"=======> %d和%d", points[10].x,points[10].y);
+		::wsprintf(buf, L"=======> %d和%d", points[10].x, points[10].y);
 		TextOut(hdc, 300, 300, buf, ::wcslen(buf));
 	}
 
 }
 
-calres calculate(queue<string> rpn, float x)
+calres calculate(queue<valsym> rpn, float x)
 {
 	calres result;
 	result.valid = true;
@@ -55,26 +55,26 @@ calres calculate(queue<string> rpn, float x)
 	int j = rpn.size();
 	while (j--)
 	{
-		string s = rpn.front();
+		valsym t_vs = rpn.front();
 		rpn.pop();
-		if (s == "x")
+		if (t_vs.type == 1)
 		{
-			s = to_string(x);
+			t_vs.type = 0;
+			t_vs.val = x;
 		}
-		rpn.push(s);
+		rpn.push(t_vs);
 	}
 	while (!rpn.empty())
 	{
-		string s = rpn.front();
+		valsym t_vs = rpn.front();
 		rpn.pop();
-		if (isdigit(s[0]) || (s[0] == '-' && isdigit(s[1])))
+		if (t_vs.type == 0)
 		{
-			double d = atof(s.c_str());
-			st_result.push(d);
+			st_result.push(t_vs.val);
 		}
 		else
 		{
-			char op = s[0];
+			TCHAR op = t_vs.sym[0];
 			double right = st_result.top();
 			st_result.pop();
 			double left = st_result.top();
@@ -104,7 +104,7 @@ calres calculate(queue<string> rpn, float x)
 				{
 					//报错
 					result.valid = false;
-					break;
+					return result;
 				}
 				double answer = left / right;
 				st_result.push(answer);
@@ -134,102 +134,120 @@ calres calculate(queue<string> rpn, float x)
 }
 
 //将输入的式子转为RPN
-queue<string> postfix(string expression)
+queue<valsym> postfix(TCHAR* expression)
 {
-	char ch, ch_pre = '#';
-	for (unsigned int i = 0; i < expression.length();)
+	//TCHAR ch, ch_pre = '#';
+	TCHAR** e2 = tokenizer(expression);
+	/*for (unsigned int i = 0; i < wcslen(expression);)
 	{
-		ch = expression.at(i++);
-		if (isdigit(ch_pre) && ch == 'x')
-		{
-			char x = '*';
-			expression = expression.insert(i - 1, &x, 1);
-			ch = expression.at(++i);
-			ch_pre = 'x';
-		}
-		else
-		{
-			ch_pre = ch;
-		}
-
+	ch = *(expression+i);
+	i++;
+	if (isdigit(ch_pre) && ch == 'x')
+	{
+	TCHAR x = '*';
+	expression = expression.insert(i - 1, &x, 1);
+	ch = expression.at(++i);
+	ch_pre = 'x';
 	}
-	cout << expression << endl;
-	map<char, int> isp;
-	isp.insert(pair<char, int>('#', 0));
-	isp.insert(pair<char, int>('(', 1));
-	isp.insert(pair<char, int>('*', 5));
-	isp.insert(pair<char, int>('/', 5));
-	isp.insert(pair<char, int>('%', 5));
-	isp.insert(pair<char, int>('+', 3));
-	isp.insert(pair<char, int>('-', 3));
-	isp.insert(pair<char, int>(')', 8));
-	isp.insert(pair<char, int>('^', 6));
-	map<char, int> icp;
-	icp.insert(pair<char, int>('#', 0));
-	icp.insert(pair<char, int>('(', 8));
-	icp.insert(pair<char, int>('*', 4));
-	icp.insert(pair<char, int>('/', 4));
-	icp.insert(pair<char, int>('%', 4));
-	icp.insert(pair<char, int>('+', 2));
-	icp.insert(pair<char, int>('-', 2));
-	icp.insert(pair<char, int>(')', 1));
-	icp.insert(pair<char, int>('^', 7));
-
-	string t_str = expression + '#';
-	int index = 0;
-	stack<char> symbol;
-	queue<string> result;
-	string s;
-	ch = '#';
-	symbol.push(ch);
-	ch = t_str.at(index++);
-	while (!symbol.empty() || ch != '#')
+	else
 	{
-		switch (judgeX(ch))
+	ch_pre = ch;
+	}
+
+	}*/
+	map<TCHAR, int> isp;
+	isp.insert(pair<TCHAR, int>('#', 0));
+	isp.insert(pair<TCHAR, int>('(', 1));
+	isp.insert(pair<TCHAR, int>('*', 5));
+	isp.insert(pair<TCHAR, int>('/', 5));
+	isp.insert(pair<TCHAR, int>('%', 5));
+	isp.insert(pair<TCHAR, int>('+', 3));
+	isp.insert(pair<TCHAR, int>('-', 3));
+	isp.insert(pair<TCHAR, int>(')', 8));
+	isp.insert(pair<TCHAR, int>('^', 6));
+	map<TCHAR, int> icp;
+	icp.insert(pair<TCHAR, int>('#', 0));
+	icp.insert(pair<TCHAR, int>('(', 8));
+	icp.insert(pair<TCHAR, int>('*', 4));
+	icp.insert(pair<TCHAR, int>('/', 4));
+	icp.insert(pair<TCHAR, int>('%', 4));
+	icp.insert(pair<TCHAR, int>('+', 2));
+	icp.insert(pair<TCHAR, int>('-', 2));
+	icp.insert(pair<TCHAR, int>(')', 1));
+	icp.insert(pair<TCHAR, int>('^', 7));
+
+	//	string t_str = expression + '#';
+	INT index = 0;
+	stack<TCHAR> symbol;
+	queue<valsym> result;
+	valsym t_valsym;
+	//	string s;
+	TCHAR ch = '#';
+	TCHAR* buf;
+	symbol.push(ch);
+	buf = e2[index++];
+	while (e2[index] != NULL)
+	{
+		switch (judgeBuf(buf))
 		{
 		case 0:
 		{
-			s = string(&ch, 1);
+			t_valsym.type = 0;
+			wstring s(buf);
+			t_valsym.val = _wtof(buf);
+			result.push(t_valsym);
+			buf = e2[index++];
+			/*s = string(&ch, 1);
 			ch = t_str.at(index++);
 			while (isdigit(ch) || ch == '.')
 			{
-				s += ch;
-				ch = t_str.at(index++);
+			s += ch;
+			ch = t_str.at(index++);
 			}
 			index -= 1;
 			result.push(s);
-			ch = t_str.at(index++);
+			ch = t_str.at(index++);*/
 			break;
 		}
 		case 1:
 		{
-			s = string(&ch, 1);
+			t_valsym.type = 1;
+			t_valsym.sym[0] = 'x';
+			t_valsym.sym[1] = '\0';
+			result.push(t_valsym);
+			buf = e2[index++];
+			/*s = string(&ch, 1);
 			result.push(s);
-			ch = t_str.at(index++);
+			ch = t_str.at(index++);*/
 			break;
 		}
 		case -1:
 		{
-			char& symbol_top = symbol.top();
+			ch = buf[0];
+			TCHAR& symbol_top = symbol.top();
 			if (isp[symbol_top] < icp[ch])
 			{
 				symbol.push(ch);
-				ch = t_str.at(index++);
+				buf = e2[index++];
 			}
 			else if (isp[symbol_top] > icp[ch])
 			{
-				char& op = symbol.top();
+				TCHAR& op = symbol.top();
 				symbol.pop();
-				s = string(&op, 1);
-				result.push(s);
+				t_valsym.type = -1;
+				t_valsym.sym[0] = op;
+				t_valsym.sym[1] = '\0';
+				//s = string(&op, 1);
+				result.push(t_valsym);
 			}
 			else
 			{
-				char& op = symbol.top();
+				TCHAR& op = symbol.top();
 				symbol.pop();
 				if (op == '(')
 				{
-					ch = t_str.at(index++);
+					buf = e2[index++];
+					//ch = t_str.at(index++);
 				}
 			}
 			break;
@@ -243,10 +261,11 @@ queue<string> postfix(string expression)
 }
 
 //判断下一个读取的字符是数字还是符号还是x
-int judgeX(char ch)
+int judgeX(TCHAR ch)
 {
 
-	if (isdigit(ch))
+	if (ch == '0' || ch == '1' || ch == '2' || ch == '3' || ch == '4' || ch == '5'
+		|| ch == '6' || ch == '7' || ch == '8' || ch == '9')
 	{
 		return 0;
 	}
@@ -272,4 +291,98 @@ int judgeX(char ch)
 			return -2;
 		}
 	}
+}
+
+int judgeBuf(TCHAR* buf)
+{
+	if (judgeX(buf[0]) == -1)
+	{
+		if (buf[1] != '\0' && judgeX(buf[1]) == 0)
+			return 0;
+		else
+			return -1;
+	}
+	else if (judgeX(buf[0]) == 0)
+	{
+		return 0;
+	}
+	else if (judgeX(buf[0]) == 1)
+	{
+		return 1;
+	}
+	else
+	{
+		return -2;
+	}
+}
+
+TCHAR** tokenizer(TCHAR* expression)
+{
+	TCHAR** e2 = new TCHAR*[wcslen(expression) * 2 - 1];
+	TCHAR bu[20];
+	wsprintf(bu, L"==>%d\n", wcslen(expression));
+	OutputDebugString(bu);
+	TCHAR now, pre;
+	pre = '#';
+	int tokennum = 0;
+	const INT bufsize = 20;
+	for (INT i = 0; i < wcslen(expression);)
+	{
+		TCHAR buf[bufsize];
+		INT j = 0;
+		now = expression[i];
+		INT judge_x = judgeX(now);
+		if (judge_x == 0)
+		{
+			BOOL p_n = TRUE;
+			if (i >= 2 && expression[i - 2] == '(' && expression[i - 1] == '-')
+			{
+				p_n = FALSE;
+			}
+			if (!p_n)
+			{
+				buf[j++] = '-';
+			}
+			buf[j++] = now;
+			i++;
+			now = expression[i];
+			while (judgeX(now) == 0 || now == '.')
+			{
+				buf[j++] = now;
+				i++;
+				now = expression[i];
+			}
+			pre = expression[i - 1];
+			buf[j] = '\0';
+			e2[tokennum++] = buf;
+		}
+		else if (judge_x == 1)
+		{
+			if (judgeX(pre) == 0)
+			{
+				buf[0] = '*';
+				buf[1] = '\0';
+				e2[tokennum++] = buf;
+			}
+			buf[0] = 'x';
+			buf[1] = '\0';
+			e2[tokennum++] = buf;
+			pre = now;
+			i++;
+			now = expression[i];
+
+		}
+		else
+		{
+			buf[0] = now;
+			buf[1] = '\0';
+			e2[tokennum++] = buf;
+			pre = now;
+			i++;
+			now = expression[i];
+
+		}
+	}
+	e2[tokennum] = NULL;
+	return e2;
 }

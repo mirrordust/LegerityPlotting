@@ -37,3 +37,13 @@ const int EDIT_YRANGE_TOP = 507;
 const int EDIT_YRANGE_BOTTOM = 508;
 
 
+struct strfunc
+{
+	int number;
+	COLORREF lineColor[7]; //图形线条颜色
+	string functions[7];// = new string[7];
+	strfunc()
+	{
+		number = 0;
+	}
+};

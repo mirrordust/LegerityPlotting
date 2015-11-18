@@ -21,8 +21,8 @@ BOOL gridOn; //是否显示格子线
 BOOL tickMarksOn; //是否显示刻度线
 BOOL numbersOn; //是否显示坐标轴上的数字
 
+strfunc funcs; //保存函数
 COLORREF backgroundColor; //背景颜色
-COLORREF lineColor[7]; //图形线条颜色
 COLORREF gridColor; //网格颜色
 COLORREF axisColor; //坐标轴颜色
 //COLORREF tickColor; //刻度线颜色
@@ -76,13 +76,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	backgroundColor = RGB(255, 255, 255); //背景颜色
 	//函数颜色
-	lineColor[0] = 0xff0000;
-	lineColor[1] = 0xff9900;
-	lineColor[2] = 0xffff00;
-	lineColor[3] = 0x00ff00;
-	lineColor[4] = 0x4a86e8;
-	lineColor[5] = 0x0000ff;
-	lineColor[6] = 0x9900ff;
+	funcs.lineColor[0] = 0xff0000;
+	funcs.lineColor[1] = 0xff9900;
+	funcs.lineColor[2] = 0xffff00;
+	funcs.lineColor[3] = 0x00ff00;
+	funcs.lineColor[4] = 0x4a86e8;
+	funcs.lineColor[5] = 0x0000ff;
+	funcs.lineColor[6] = 0x9900ff;
 	gridColor = RGB(90, 90, 90);
 	axisColor = RGB(0, 0, 0);
 	numberColor = RGB(0, 0, 0);
@@ -280,6 +280,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			console = CreateDialog(hInst, MAKEINTATOM(IDD_CONSOLE), hWnd, Console);
 			ShowWindow(console, SW_SHOW);
+			if (gridOn == TRUE)
+				CheckDlgButton(console, IDC_GR_ON, BST_CHECKED);
+			if (XaxisOn == TRUE && YaxisOn == TRUE)
+				CheckDlgButton(console, IDC_AXIS_ON, BST_CHECKED);
+			if (tickMarksOn == TRUE)
+				CheckDlgButton(console, IDC_TICK_ON, BST_CHECKED);
+			if (numbersOn == TRUE)
+				CheckDlgButton(console, IDC_NUMBER_ON, BST_CHECKED);
+			/*HWND cHwnd = GetDlgItem(console, IDC_BUTTON_BG);
+			HDC cHdc = GetDC(cHwnd);
+			HBRUSH hBrush = CreateSolidBrush(numberColor);
+			SelectObject(cHdc, hBrush);
+			RECT rect_bg;
+			GetClientRect(cHwnd, &rect_bg);
+			FillRect(cHdc, &rect_bg, hBrush);*/
+			
+			//TCHAR s = to_string(XrangeLeft).c_str();
+			TCHAR buf[100];
+			//::wsprintf(buf, L"%d", 5);
+			swprintf(buf, L"%f", XrangeLeft);
+			SetDlgItemText(console, IDC_EDIT_X_RANGE_LEFT, buf);
+			swprintf(buf, L"%f", XrangeRight);
+			SetDlgItemText(console, IDC_EDIT_X_RANGE_RIGHT, buf);
+			swprintf(buf, L"%f", YrangeTop);
+			SetDlgItemText(console, IDC_EDIT_Y_RANGE_TOP, buf);
+			swprintf(buf, L"%f", YrangeBottom);
+			SetDlgItemText(console, IDC_EDIT_Y_RANGE_BOTTOM, buf);
+			SetDlgItemInt(console, IDC_EDIT_X_TICK_DISTANCE, XtickDistance, TRUE);
+			SetDlgItemInt(console, IDC_EDIT_Y_TICK_DISTANCE, YtickDistance, TRUE);
+			SetDlgItemInt(console, IDC_EDIT_X_LABEL_INTERVAL, XlabelInterval, TRUE);
+			SetDlgItemInt(console, IDC_EDIT_Y_LABEL_INTERVAL, YlabelInterval, TRUE);
+
 		}
 		break;
 		case IDM_ABOUT:
@@ -609,9 +641,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			YrangeTop = plottingAreaWidth / YplottingScale / 2;
 			YrangeBottom = -YrangeTop;
 		}
-
-		XplottingScale = plottingAreaLength / (XrangeRight - XrangeLeft);
-		YplottingScale = plottingAreaWidth / (YrangeTop - YrangeBottom);
+		
+		//XplottingScale = plottingAreaLength / (XrangeRight - XrangeLeft);
+		//YplottingScale = plottingAreaWidth / (YrangeTop - YrangeBottom);
 
 		//确定坐标原点X值
 		if (XrangeLeft < 0 && XrangeRight < 0)
@@ -640,8 +672,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			origin.y = plottingAreaRect.bottom * (YrangeTop / (YrangeTop - YrangeBottom));
 		}
 
-		// 开始绘图
-		//SetBkColor(hdc, backgroundColor);
 
 		if (gridOn == TRUE)
 		{
@@ -868,12 +898,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 
 		//画函数图象
+		/*int function_num = funcs.number;
+		int c = 0;
+		while (c < function_num)
+		{
+			HPEN hPen = CreatePen(PS_DASH, 2, funcs.lineColor[c]);
+			hpenOld = (HPEN)SelectObject(hdc, hPen);
+			plot(hdc, funcs.functions[c], origin, XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
+			DeleteObject(hPen);
+		}*/
 		HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
 		hpenOld = (HPEN)::SelectObject(hdc, hpen4);
-		plot(hdc, "x^2-2", origin, 
+		plot(hdc, L"x+3", origin, 
 			XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
- 		
+		
+		DeleteObject(hpen4);
+
 		SelectObject(hdc, hpenOld);
+		
 
 		EndPaint(hWnd, &ps);
 	}
@@ -897,15 +939,62 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		return (INT_PTR)TRUE;
 
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		if (LOWORD(wParam) == IDCANCEL)
 		{
-			EndDialog(hDlg, LOWORD(wParam));
+			//EndDialog(hDlg, LOWORD(wParam));
+			DestroyWindow(console);
 			return (INT_PTR)TRUE;
 		}
-		else if (LOWORD(wParam) == 1/*IDC_BUTTON1*/)
+		else if (LOWORD(wParam) == IDPLOT)
 		{
+			TCHAR buf[100];
+			GetDlgItemText(hDlg, IDC_EDIT_X_RANGE_LEFT, buf, 100);
+			XrangeLeft = _wtof(buf);
+			GetDlgItemText(hDlg, IDC_EDIT_X_RANGE_RIGHT, buf, 100);
+			XrangeRight = _wtof(buf);
+			GetDlgItemText(hDlg, IDC_EDIT_Y_RANGE_TOP, buf, 100);
+			YrangeTop = _wtof(buf);
+			GetDlgItemText(hDlg, IDC_EDIT_Y_RANGE_BOTTOM, buf, 100);
+			YrangeBottom = _wtof(buf);
+			XtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_X_TICK_DISTANCE, NULL, TRUE);
+			YtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_Y_TICK_DISTANCE, NULL, TRUE);
+			XlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_X_LABEL_INTERVAL, NULL ,TRUE);
+			YlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_Y_LABEL_INTERVAL, NULL, TRUE);
+			TCHAR funbuf[500];
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC1, funbuf, 500);
+
+			wstring f(funbuf);
+			
+			
+			AllocConsole();
+			freopen("CONOUT$", "w", stdout);
+			wcout << f;
+			
+			//funcs.functions[0] = f;
+
+
+			/*if (!strcmp((char*)buf, ""))
+			{
+				funcs.number++;
+				funcs.functions[0] = string((char)funbuf, wcslen(funbuf));
+			}*/
+//			AllocConsole();
+	//		freopen("CONOUT$", "w", stdout);
+		//	printf("233");
+			//cout <<"=="<< funcs.functions[0]<<"==="<<"ha"<<endl;
+			//printf("i的值为%s\n", funbuf);
 			
 		}
+		/*else
+		{
+			HWND h = GetDlgItem(hDlg, IDC_BUTTON_BG);
+			HDC cHdc = GetDC(h);
+			HBRUSH hBrush = CreateSolidBrush(numberColor);
+			SelectObject(cHdc, hBrush);
+			RECT rect_bg;
+			GetClientRect(h, &rect_bg);
+			FillRect(cHdc, &rect_bg, hBrush);
+		}*/
 		//else if (LOWORD(wParam) == IDC_BUTTON1)
 		//{
 
