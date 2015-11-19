@@ -15,6 +15,8 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 
 HWND console;
 HWND hwndm;
+RECT plottingAreaRect;
+
 
 BOOL XaxisOn; //是否显示X轴
 BOOL YaxisOn; //是否显示Y轴
@@ -315,7 +317,122 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemInt(console, IDC_EDIT_Y_LABEL_INTERVAL, YlabelInterval, TRUE);
 
 		}
-		break;
+			break;
+		case IDM_SAVE:
+		{
+			HDC hdc = GetDC(hWnd);
+			HDC hMemDc = CreateCompatibleDC(hdc);
+			LONG width = plottingAreaRect.right - plottingAreaRect.left;
+			LONG height = plottingAreaRect.bottom - plottingAreaRect.top;
+			HBITMAP hbmp = CreateCompatibleBitmap(hdc, width, height);
+			SelectObject(hMemDc, hbmp);
+			BitBlt(hMemDc, 0, 0, width, height, hdc, 0, 0, SRCCOPY);
+			int nBits = GetDeviceCaps(hdc, BITSPIXEL);
+			DWORD dwLineBits = 0;
+			switch (nBits)
+			{
+			case 16:
+				dwLineBits = width * 2;
+				break;
+			case 24:
+				dwLineBits = (width + 1) * 3 - ((width + 1) * 3) % 4;
+				break;
+			case 32:
+				dwLineBits = width * 4;
+				break;
+			default:
+				//MessageBox(NULL, _T("不支持该格式！"), _T("不支持！"), MB_OK);
+				break;
+			}
+			DWORD dwBitsCount = dwLineBits * height;
+			DWORD dwFileSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dwBitsCount;
+			BYTE * pMem = (BYTE *)GlobalAlloc(GMEM_FIXED | GMEM_ZEROINIT, dwFileSize);
+			if (NULL == pMem)
+			{
+				MessageBox(hWnd, _T("保存失败！"), _T("错误！"), MB_OK);
+			}
+			BITMAPFILEHEADER* pBMPHeader = (BITMAPFILEHEADER*)pMem;
+			BITMAPINFOHEADER* pInfoHeader = (BITMAPINFOHEADER*)((BYTE *)pBMPHeader + sizeof(BITMAPFILEHEADER));
+			BYTE* pBits = (BYTE*)pInfoHeader + sizeof(BITMAPINFOHEADER);
+			//初始化fileheader和infoheader
+			pBMPHeader->bfType = ('M' << 8) | 'B';
+			pBMPHeader->bfSize = dwFileSize;
+			pBMPHeader->bfReserved1 = 0;
+			pBMPHeader->bfReserved2 = 0;
+			pBMPHeader->bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+
+			pInfoHeader->biSize = sizeof(BITMAPINFOHEADER);
+			pInfoHeader->biWidth = width;
+			pInfoHeader->biHeight = height;
+			pInfoHeader->biPlanes = GetDeviceCaps(hdc, PLANES);  //调色板数
+			pInfoHeader->biBitCount = nBits;
+			pInfoHeader->biCompression = BI_RGB;
+			pInfoHeader->biSizeImage = dwBitsCount;
+			pInfoHeader->biXPelsPerMeter = GetDeviceCaps(hdc, LOGPIXELSX);
+			pInfoHeader->biYPelsPerMeter = GetDeviceCaps(hdc, LOGPIXELSY);
+			pInfoHeader->biClrUsed = 0;
+			pInfoHeader->biClrImportant = 0;
+			//图像数据
+			int nLines = GetDIBits(hdc, hbmp, 0, height, pBits,
+				(BITMAPINFO *)pInfoHeader, DIB_RGB_COLORS);
+			if (0 == nLines)
+			{
+				//DWORD errno = GetLastError();
+				MessageBox(hWnd, _T("保存失败！"), _T("错误！"), MB_OK);
+			}
+			ReleaseDC(hWnd, hdc);
+			DeleteDC(hMemDc);
+			hMemDc = NULL;
+			DeleteObject(hbmp);
+
+			wstring filepathname;
+			//SelectDir(hWnd, filepathname);
+			SaveAsBmp(hWnd, filepathname);
+
+
+			//保存文件
+			HANDLE hFile = CreateFile(filepathname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				//CreateFile(L"TESTimage.bmp", GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
+			{
+				MessageBox(hWnd, _T("文件已经存在！"), _T("错误！"), MB_OK);
+			}
+			//写入
+			DWORD dwWriteCount = 0;
+			if (!WriteFile(hFile, (void *)pBMPHeader, dwFileSize, &dwWriteCount, NULL))
+			{
+				MessageBox(NULL, _T("写入文件失败！"), _T("错误"), MB_OK | MB_ICONEXCLAMATION);
+				CloseHandle(hFile);
+			}
+			//关闭文件
+			CloseHandle(hFile);
+			GlobalFree((void *)pBMPHeader);
+			//=============================
+			//=============================
+
+			/*HDC hdc = GetDC(hWnd);
+			BYTE* buf = new BYTE[plottingAreaRect.right * plottingAreaRect.bottom * 3];
+			memset(buf, 0, plottingAreaRect.right * plottingAreaRect.bottom);
+			for (int i = 0; i < plottingAreaRect.bottom; i++)
+			{
+				for (int j = 0; j < plottingAreaRect.right; j++)
+				{
+					COLORREF cr = GetPixel(hdc, j, i);
+					LONG t = i*plottingAreaRect.right + j;
+					buf[t * 3] = GetRValue(cr);
+					buf[t * 3 + 1] = GetGValue(cr);
+					buf[t * 3 + 2] = GetBValue(cr);
+				}
+			}
+			long newsize;
+			BYTE* bufmb = ConvertRGBToBMPBuffer(buf, plottingAreaRect.right, 
+				plottingAreaRect.bottom, &newsize);
+			SaveBMP(bufmb, plottingAreaRect.right, plottingAreaRect.bottom, newsize, L"TESTimage.bmp");
+			delete(bufmb);
+			MessageBox(hWnd, L"保存成功", L"提示", 0);
+			ReleaseDC(hWnd, hdc);*/
+		}
+			break;
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
@@ -617,7 +734,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//EndPaint(hWnd, &ps);
 		//=========================================================================
 		PAINTSTRUCT ps;
-		RECT plottingAreaRect;
+//		RECT plottingAreaRect;
 		POINT origin;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		INT plottingAreaLength;

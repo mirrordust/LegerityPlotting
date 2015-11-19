@@ -299,3 +299,160 @@ COLORREF cscolor(HWND hButton, COLORREF pre)
 		return pre;
 	}
 }
+
+bool SaveBMP(BYTE* Buffer, int width, int height, long paddedsize, LPCTSTR bmpfile)
+{
+	// declare bmp structures 
+	BITMAPFILEHEADER bmfh;
+	BITMAPINFOHEADER info;
+
+	// andinitialize them to zero
+	memset(&bmfh, 0, sizeof(BITMAPFILEHEADER));
+	memset(&info, 0, sizeof(BITMAPINFOHEADER));
+
+	// fill the fileheader with data
+	bmfh.bfType = 0x4d42;       // 0x4d42 = 'BM'
+	bmfh.bfReserved1 = 0;
+	bmfh.bfReserved2 = 0;
+	bmfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + paddedsize;
+	bmfh.bfOffBits = 0x36;		// number of bytes to start of bitmap bits
+
+								// fill the infoheader
+
+	info.biSize = sizeof(BITMAPINFOHEADER);
+	info.biWidth = width;
+	info.biHeight = height;
+	info.biPlanes = 1;			// we only have one bitplane
+	info.biBitCount = 24;		// RGB mode is 24 bits
+	info.biCompression = BI_RGB;
+	info.biSizeImage = 0;		// can be 0 for 24 bit images
+	info.biXPelsPerMeter = 0x0ec4;     // paint and PSP use this values
+	info.biYPelsPerMeter = 0x0ec4;
+	info.biClrUsed = 0;			// we are in RGB mode and have no palette
+	info.biClrImportant = 0;    // all colors are important
+
+								// now we open the file to write to
+	HANDLE file = CreateFile(bmpfile, GENERIC_WRITE, FILE_SHARE_READ,
+		NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (file == NULL)
+	{
+		CloseHandle(file);
+		return false;
+	}
+
+	// write file header
+	unsigned long bwritten;
+	if (WriteFile(file, &bmfh, sizeof(BITMAPFILEHEADER), &bwritten, NULL) == false)
+	{
+		CloseHandle(file);
+		return false;
+	}
+	// write infoheader
+	if (WriteFile(file, &info, sizeof(BITMAPINFOHEADER), &bwritten, NULL) == false)
+	{
+		CloseHandle(file);
+		return false;
+	}
+	// write image data
+	if (WriteFile(file, Buffer, paddedsize, &bwritten, NULL) == false)
+	{
+		CloseHandle(file);
+		return false;
+	}
+
+	// and close file
+	CloseHandle(file);
+
+	return true;
+}
+
+BYTE* ConvertRGBToBMPBuffer(BYTE* Buffer, int width, int height, long* newsize)
+{
+
+	// first make sure the parameters are valid
+	if ((NULL == Buffer) || (width == 0) || (height == 0))
+		return NULL;
+
+	// now we have to find with how many bytes
+	// we have to pad for the next DWORD boundary	
+
+	int padding = 0;
+	int scanlinebytes = width * 3;
+	while ((scanlinebytes + padding) % 4 != 0)     // DWORD = 4 bytes
+		padding++;
+	// get the padded scanline width
+	int psw = scanlinebytes + padding;
+
+	// we can already store the size of the new padded buffer
+	*newsize = height * psw;
+
+	// and create new buffer
+	BYTE* newbuf = new BYTE[*newsize];
+
+	// fill the buffer with zero bytes then we dont have to add
+	// extra padding zero bytes later on
+	memset(newbuf, 0, *newsize);
+
+	// now we loop trough all bytes of the original buffer, 
+	// swap the R and B bytes and the scanlines
+	long bufpos = 0;
+	long newpos = 0;
+	for (int y = 0; y < height; y++)
+		for (int x = 0; x < 3 * width; x += 3)
+		{
+			bufpos = y * 3 * width + x;     // position in original buffer
+			newpos = (height - y - 1) * psw + x;           // position in padded buffer
+
+			newbuf[newpos] = Buffer[bufpos + 2];       // swap r and b
+			newbuf[newpos + 1] = Buffer[bufpos + 1]; // g stays
+			newbuf[newpos + 2] = Buffer[bufpos];     // swap b and r
+		}
+
+	return newbuf;
+}
+
+BOOL SelectDir(HWND hWnd, wstring &strPath)
+{
+	BROWSEINFO bifolder;
+	wchar_t FileName[MAX_PATH];
+	ZeroMemory(&bifolder, sizeof(BROWSEINFO));
+	bifolder.hwndOwner = hWnd;				// 拥有者句柄
+	bifolder.pszDisplayName = FileName;		// 存放目录路径缓冲区
+	bifolder.lpszTitle = TEXT("请选择文件夹");	// 标题
+	bifolder.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX; // 新的样式,带编辑框
+
+	LPITEMIDLIST idl = SHBrowseForFolder(&bifolder);
+	if (idl == NULL)
+	{
+		return FALSE;
+	}
+
+	SHGetPathFromIDList(idl, FileName);
+	strPath = FileName;
+	wcout.imbue(locale("chs"));
+	wcout << L"所选目录: " << strPath << endl;
+	return TRUE;
+}
+
+BOOL SaveAsBmp(HWND hwnd, wstring &strPath)
+{
+	wchar_t szPathName[MAX_PATH] = { 0 };
+	OPENFILENAME ofn = { OPENFILENAME_SIZE_VERSION_400 };//or  {sizeof (OPENFILENAME)}  
+	ofn.hwndOwner = hwnd;			// 拥有者句柄	
+	wcscpy_s(szPathName, TEXT("new.bmp"));		// 定义预先的存储文件名
+	ofn.lpstrFilter = TEXT("bmp文件(*.bmp)\0*.bmp\0所有文件(*.*)\0*.*\0\0");
+	ofn.lpstrFile = szPathName;
+	ofn.nMaxFile = sizeof(szPathName);
+	ofn.lpstrTitle = TEXT("保存");
+	ofn.Flags = OFN_OVERWRITEPROMPT;		// 覆盖提示
+
+	BOOL bOk = GetSaveFileName(&ofn);
+	if (!bOk)
+	{
+		return FALSE;
+	}
+	strPath = szPathName;
+
+	return TRUE;
+}
+

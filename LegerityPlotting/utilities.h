@@ -22,6 +22,14 @@ calres calculate(queue<string> rpn, float x);
 
 COLORREF cscolor(HWND hButton, COLORREF pre);
 
+bool SaveBMP(BYTE* Buffer, int width, int height, long paddedsize, LPCTSTR bmpfile);
+
+BYTE* ConvertRGBToBMPBuffer(BYTE* Buffer, int width, int height, long* newsize);
+
+BOOL SelectDir(HWND hWnd, wstring &strPath);
+
+BOOL SaveAsBmp(HWND hwnd, wstring &strPath);
+
 /*TCHAR buf[1000];
 ::wsprintf(buf, L"=======> %d", CW_USEDEFAULT);
 ::OutputDebugString(buf);*/
