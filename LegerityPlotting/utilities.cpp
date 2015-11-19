@@ -273,3 +273,29 @@ int judgeX(char ch)
 		}
 	}
 }
+
+COLORREF cscolor(HWND hButton, COLORREF pre)
+{
+	CHOOSECOLOR cc;                 // common dialog box structure 
+	static COLORREF acrCustClr[16]; // array of custom colors 
+	static COLORREF rgbCurrent = RGB(0, 0, 0);        // initial color selection
+
+	// Initialize CHOOSECOLOR 
+	ZeroMemory(&cc, sizeof(cc));
+	cc.lStructSize = sizeof(cc);
+	cc.lpCustColors = (LPDWORD)acrCustClr;
+	cc.rgbResult = rgbCurrent;
+	cc.hwndOwner = hButton;
+	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+
+	if (ChooseColor(&cc) == TRUE)
+	{
+		//hbrush = CreateSolidBrush(cc.rgbResult);
+		rgbCurrent = cc.rgbResult;
+		return rgbCurrent;
+	}
+	else
+	{
+		return pre;
+	}
+}

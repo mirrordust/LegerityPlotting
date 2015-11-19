@@ -20,6 +20,8 @@ int judgeX(char ch);
 
 calres calculate(queue<string> rpn, float x);
 
+COLORREF cscolor(HWND hButton, COLORREF pre);
+
 /*TCHAR buf[1000];
 ::wsprintf(buf, L"=======> %d", CW_USEDEFAULT);
 ::OutputDebugString(buf);*/

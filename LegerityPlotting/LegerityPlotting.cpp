@@ -14,6 +14,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 
 HWND console;
+HWND hwndm;
 
 BOOL XaxisOn; //是否显示X轴
 BOOL YaxisOn; //是否显示Y轴
@@ -199,6 +200,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
+		hwndm = hWnd;
 		/*RECT plotAreaRect;
 		GetClientRect(hWnd, &plotAreaRect);
 		HWND label1, label2, label3, label4;
@@ -671,8 +673,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			origin.y = plottingAreaRect.bottom * (YrangeTop / (YrangeTop - YrangeBottom));
 		}
+		
 
+		/*HDC hdc_bg = GetDC(button_bg);
+		HBRUSH hBrush_bg = CreateSolidBrush(RGB(0,0,0));
+		SelectObject(hdc_bg, hBrush_bg);
+		RECT rect_bg;
+		GetClientRect(button_bg, &rect_bg);
+		FillRect(hdc_bg, &rect_bg, hBrush_bg);*/
 
+		 
 		if (gridOn == TRUE)
 		{
 			HPEN hpen2 = ::CreatePen(PS_DASH, 1, gridColor);
@@ -898,7 +908,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 
 		//画函数图象
-		/*int function_num = funcs.number;
+		int function_num = funcs.number;
 		int c = 0;
 		while (c < function_num)
 		{
@@ -906,13 +916,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			hpenOld = (HPEN)SelectObject(hdc, hPen);
 			plot(hdc, funcs.functions[c], origin, XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
 			DeleteObject(hPen);
-		}*/
-		HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
+			c++;
+		}
+		/*HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
 		hpenOld = (HPEN)::SelectObject(hdc, hpen4);
 		plot(hdc, "x^2+3.5*x", origin, 
 			XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
 		
-		DeleteObject(hpen4);
+		DeleteObject(hpen4);*/
+
 
 		SelectObject(hdc, hpenOld);
 		
@@ -945,8 +957,95 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			DestroyWindow(console);
 			return (INT_PTR)TRUE;
 		}
+		else if (LOWORD(wParam) == IDC_BUTTON_BG)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_BG);
+			backgroundColor = cscolor(hb, backgroundColor);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_GR)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_GR);
+			gridColor = cscolor(hb, gridColor);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_AXIS)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_AXIS);
+			axisColor = cscolor(hb, axisColor);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_NUMBER)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_NUMBER);
+			numberColor = cscolor(hb, numberColor);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC1)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC1);
+			funcs.lineColor[0] = cscolor(hb, funcs.lineColor[0]);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC2)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC2);
+			funcs.lineColor[1] = cscolor(hb, funcs.lineColor[1]);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC3)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC3);
+			funcs.lineColor[2] = cscolor(hb, funcs.lineColor[2]);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC4)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC4);
+			funcs.lineColor[3] = cscolor(hb, funcs.lineColor[3]);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC5)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC5);
+			funcs.lineColor[4] = cscolor(hb, funcs.lineColor[4]);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC6)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC6);
+			funcs.lineColor[5] = cscolor(hb, funcs.lineColor[5]);
+		}
+		else if (LOWORD(wParam) == IDC_BUTTON_FUNC7)
+		{
+			HWND hb = GetDlgItem(hDlg, IDC_BUTTON_FUNC7);
+			funcs.lineColor[6] = cscolor(hb, funcs.lineColor[6]);
+		}
 		else if (LOWORD(wParam) == IDPLOT)
 		{
+			if (IsDlgButtonChecked(hDlg, IDC_GR_ON))
+			{
+				gridOn = TRUE;
+			}
+			else {
+				gridOn = FALSE;
+			}
+			if (IsDlgButtonChecked(hDlg, IDC_AXIS_ON))
+			{
+				XaxisOn = TRUE;
+				YaxisOn = TRUE;
+			}
+			else {
+				XaxisOn = FALSE;
+				YaxisOn = FALSE;
+			}
+			if (IsDlgButtonChecked(hDlg, IDC_TICK_ON))
+			{
+				tickMarksOn = TRUE;
+			}
+			else {
+				tickMarksOn = FALSE;
+			}
+			if (IsDlgButtonChecked(hDlg, IDC_NUMBER_ON))
+			{
+				numbersOn = TRUE;
+			}
+			else
+			{
+				numbersOn = FALSE;
+			}
+
 			TCHAR buf[100];
 			GetDlgItemText(hDlg, IDC_EDIT_X_RANGE_LEFT, buf, 100);
 			XrangeLeft = _wtof(buf);
@@ -960,29 +1059,102 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			YtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_Y_TICK_DISTANCE, NULL, TRUE);
 			XlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_X_LABEL_INTERVAL, NULL ,TRUE);
 			YlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_Y_LABEL_INTERVAL, NULL, TRUE);
+			//f1
+			funcs.number = 0;
 			TCHAR funbuf[500];
 			GetDlgItemText(hDlg, IDC_EDIT_FUNC1, funbuf, 500);
-
-			wstring f(funbuf);
-			
-			
-			AllocConsole();
-			freopen("CONOUT$", "w", stdout);
-			wcout << f;
-			
-			//funcs.functions[0] = f;
-
-
-			/*if (!strcmp((char*)buf, ""))
+			size_t funbufsize = wcslen(funbuf) + 1;
+			size_t convertedChars = 0;
+			const size_t newsize1 = funbufsize * 2;
+			char* nstr = new char[newsize1];
+			wcstombs_s(&convertedChars, nstr, newsize1, funbuf, _TRUNCATE);
+			string ns(nstr);
+			if (!(ns == ""))
 			{
-				funcs.number++;
-				funcs.functions[0] = string((char)funbuf, wcslen(funbuf));
-			}*/
-//			AllocConsole();
-	//		freopen("CONOUT$", "w", stdout);
-		//	printf("233");
-			//cout <<"=="<< funcs.functions[0]<<"==="<<"ha"<<endl;
-			//printf("i的值为%s\n", funbuf);
+				funcs.functions[0] = ns;
+				funcs.number += 1;
+			}
+			//f2
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC2, funbuf, 500);
+			funbufsize = wcslen(funbuf) + 1;
+			convertedChars = 0;
+			const size_t newsize2 = funbufsize * 2;
+			nstr = new char[newsize2];
+			wcstombs_s(&convertedChars, nstr, newsize2, funbuf, _TRUNCATE);
+			ns = string(nstr);
+			if (!(ns == ""))
+			{
+				funcs.functions[1] = ns;
+				funcs.number += 1;
+			}
+			//f3
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC3, funbuf, 500);
+			funbufsize = wcslen(funbuf) + 1;
+			convertedChars = 0;
+			const size_t newsize3 = funbufsize * 2;
+			nstr = new char[newsize3];
+			wcstombs_s(&convertedChars, nstr, newsize3, funbuf, _TRUNCATE);
+			ns = string(nstr);
+			if (!(ns == ""))
+			{
+				funcs.functions[2] = ns;
+				funcs.number += 1;
+			}
+			//f4
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC4, funbuf, 500);
+			funbufsize = wcslen(funbuf) + 1;
+			convertedChars = 0;
+			const size_t newsize4 = funbufsize * 2;
+			nstr = new char[newsize4];
+			wcstombs_s(&convertedChars, nstr, newsize4, funbuf, _TRUNCATE);
+			ns = string(nstr);
+			if (!(ns == ""))
+			{
+				funcs.functions[3] = ns;
+				funcs.number += 1;
+			}
+			//f5
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC5, funbuf, 500);
+			funbufsize = wcslen(funbuf) + 1;
+			convertedChars = 0;
+			const size_t newsize5 = funbufsize * 2;
+			nstr = new char[newsize5];
+			wcstombs_s(&convertedChars, nstr, newsize5, funbuf, _TRUNCATE);
+			ns = string(nstr);
+			if (!(ns == ""))
+			{
+				funcs.functions[4] = ns;
+				funcs.number += 1;
+			}
+			//f6
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC6, funbuf, 500);
+			funbufsize = wcslen(funbuf) + 1;
+			convertedChars = 0;
+			const size_t newsize6 = funbufsize * 2;
+			nstr = new char[newsize6];
+			wcstombs_s(&convertedChars, nstr, newsize6, funbuf, _TRUNCATE);
+			ns = string(nstr);
+			if (!(ns == ""))
+			{
+				funcs.functions[5] = ns;
+				funcs.number += 1;
+			}
+			//f7
+			GetDlgItemText(hDlg, IDC_EDIT_FUNC7, funbuf, 500);
+			funbufsize = wcslen(funbuf) + 1;
+			convertedChars = 0;
+			const size_t newsize7 = funbufsize * 2;
+			nstr = new char[newsize7];
+			wcstombs_s(&convertedChars, nstr, newsize7, funbuf, _TRUNCATE);
+			ns = string(nstr);
+			if (!(ns == ""))
+			{
+				funcs.functions[6] = ns;
+				funcs.number += 1;
+			}
+
+			InvalidateRect(hwndm, NULL, TRUE);
+			SendMessage(hwndm, WM_PAINT, NULL, NULL);
 			
 		}
 		/*else
@@ -1045,3 +1217,5 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return (INT_PTR)FALSE;
 }
+
+
