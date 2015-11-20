@@ -43,10 +43,10 @@ FLOAT YplottingScale; //Y比例尺（实际/逻辑）
 FLOAT tickMarkLength; //刻度线长度
 FLOAT gridSpacing; //格子间距
 
-HWND button_bg, button_gr, button_axis, button_number, 
-	button_gr_on, button_axis_on, button_tick_on, button_number_on,
-	edit_xtick_distance, edit_ytick_distance, edit_xlabel_interval, edit_ylabel_interval,
-	edit_xrange_left, edit_xrange_right, edit_yrange_top, edit_yrange_bottom;
+HWND button_bg, button_gr, button_axis, button_number,
+button_gr_on, button_axis_on, button_tick_on, button_number_on,
+edit_xtick_distance, edit_ytick_distance, edit_xlabel_interval, edit_ylabel_interval,
+edit_xrange_left, edit_xrange_right, edit_yrange_top, edit_yrange_bottom;
 
 
 // 此代码模块中包含的函数的前向声明: 
@@ -173,7 +173,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
-	
+
 
 	if (!hWnd)
 	{
@@ -209,12 +209,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		INT controlAreaLeft = plotAreaRect.right - rightlength;
 		label1 = CreateWindow(L"STATIC", L"显示设定", WS_CHILD | WS_VISIBLE | WS_BORDER,
 			controlAreaLeft, 0, rightlength, 20, hWnd, (HMENU)LABEL1, hInst, NULL);
-		
+
 		button_bg = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE,
 			controlAreaLeft, 20, 20, 20, hWnd, (HMENU)BUTTON_BG, hInst, NULL);
 		HWND label_bg = CreateWindow(L"STATIC", L"背景颜色", WS_CHILD | WS_VISIBLE,
 			controlAreaLeft + 50, 20, rightlength - 50, 20, hWnd, (HMENU)LABEL_BG, hInst, NULL);
-		
+
 		button_gr = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE,
 			controlAreaLeft, 40, 20, 20, hWnd, (HMENU)BUTTON_GR, hInst, NULL);
 		button_gr_on = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
@@ -222,7 +222,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		CheckDlgButton(hWnd, BUTTON_GR_ON, BST_CHECKED);
 		HWND label_gr = CreateWindow(L"STATIC", L"网格", WS_CHILD | WS_VISIBLE,
 			controlAreaLeft + 50, 40, rightlength - 50, 20, hWnd, (HMENU)LABEL_GR, hInst, NULL);
-		
+
 		button_axis = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE,
 			controlAreaLeft, 60, 20, 20, hWnd, (HMENU)BUTTON_AXIS, hInst, NULL);
 		button_axis_on = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
@@ -266,12 +266,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		edit_ytick_distance = CreateWindow(L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_NUMBER | WS_BORDER,
 			controlAreaLeft + 250, 140, 30, 20, hWnd, (HMENU)EDIT_YTICK_DISTANCE, hInst, NULL);*/
 
-		/*HDC hdc_bg = GetDC(button_bg);
-		HBRUSH hBrush_bg = CreateSolidBrush(RGB(0,0,0));
-		SelectObject(hdc_bg, hBrush_bg);
-		RECT rect_bg;
-		GetClientRect(button_bg, &rect_bg);
-		FillRect(hdc_bg, &rect_bg, hBrush_bg);*/
+			/*HDC hdc_bg = GetDC(button_bg);
+			HBRUSH hBrush_bg = CreateSolidBrush(RGB(0,0,0));
+			SelectObject(hdc_bg, hBrush_bg);
+			RECT rect_bg;
+			GetClientRect(button_bg, &rect_bg);
+			FillRect(hdc_bg, &rect_bg, hBrush_bg);*/
 	}
 	break;
 	case WM_COMMAND:
@@ -292,17 +292,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				CheckDlgButton(console, IDC_TICK_ON, BST_CHECKED);
 			if (numbersOn == TRUE)
 				CheckDlgButton(console, IDC_NUMBER_ON, BST_CHECKED);
-			/*HWND cHwnd = GetDlgItem(console, IDC_BUTTON_BG);
-			HDC cHdc = GetDC(cHwnd);
-			HBRUSH hBrush = CreateSolidBrush(numberColor);
-			SelectObject(cHdc, hBrush);
-			RECT rect_bg;
-			GetClientRect(cHwnd, &rect_bg);
-			FillRect(cHdc, &rect_bg, hBrush);*/
-			
-			//TCHAR s = to_string(XrangeLeft).c_str();
+
 			TCHAR buf[100];
-			//::wsprintf(buf, L"%d", 5);
 			swprintf(buf, L"%f", XrangeLeft);
 			SetDlgItemText(console, IDC_EDIT_X_RANGE_LEFT, buf);
 			swprintf(buf, L"%f", XrangeRight);
@@ -317,7 +308,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemInt(console, IDC_EDIT_Y_LABEL_INTERVAL, YlabelInterval, TRUE);
 
 		}
-			break;
+		break;
 		case IDM_SAVE:
 		{
 			HDC hdc = GetDC(hWnd);
@@ -387,26 +378,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			wstring filepathname;
 			//SelectDir(hWnd, filepathname);
-			SaveAsBmp(hWnd, filepathname);
+			BOOL save = SaveAsBmp(hWnd, filepathname);
 
-
-			//保存文件
-			HANDLE hFile = CreateFile(filepathname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (save)
+			{
+				//保存文件
+				HANDLE hFile = CreateFile(filepathname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 				//CreateFile(L"TESTimage.bmp", GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-			if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
-			{
-				MessageBox(hWnd, _T("文件已经存在！"), _T("错误！"), MB_OK);
-			}
-			//写入
-			DWORD dwWriteCount = 0;
-			if (!WriteFile(hFile, (void *)pBMPHeader, dwFileSize, &dwWriteCount, NULL))
-			{
-				MessageBox(NULL, _T("写入文件失败！"), _T("错误"), MB_OK | MB_ICONEXCLAMATION);
+				/*if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
+				{
+					MessageBox(hWnd, _T("文件已经存在！"), _T("错误！"), MB_OK);
+				}*/
+				//写入
+				DWORD dwWriteCount = 0;
+				if (!WriteFile(hFile, (void *)pBMPHeader, dwFileSize, &dwWriteCount, NULL))
+				{
+					MessageBox(NULL, _T("写入文件失败！"), _T("错误"), MB_OK | MB_ICONEXCLAMATION);
+					CloseHandle(hFile);
+				}
+				//关闭文件
 				CloseHandle(hFile);
+				GlobalFree((void *)pBMPHeader);
 			}
-			//关闭文件
-			CloseHandle(hFile);
-			GlobalFree((void *)pBMPHeader);
 			//=============================
 			//=============================
 
@@ -425,14 +418,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			long newsize;
-			BYTE* bufmb = ConvertRGBToBMPBuffer(buf, plottingAreaRect.right, 
+			BYTE* bufmb = ConvertRGBToBMPBuffer(buf, plottingAreaRect.right,
 				plottingAreaRect.bottom, &newsize);
 			SaveBMP(bufmb, plottingAreaRect.right, plottingAreaRect.bottom, newsize, L"TESTimage.bmp");
 			delete(bufmb);
 			MessageBox(hWnd, L"保存成功", L"提示", 0);
 			ReleaseDC(hWnd, hdc);*/
 		}
-			break;
+		break;
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
@@ -734,7 +727,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//EndPaint(hWnd, &ps);
 		//=========================================================================
 		PAINTSTRUCT ps;
-//		RECT plottingAreaRect;
+		//RECT plottingAreaRect;
 		POINT origin;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		INT plottingAreaLength;
@@ -745,12 +738,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		GetClientRect(hWnd, &plottingAreaRect);
 		plottingAreaLength = plottingAreaRect.right - plottingAreaRect.left;
 		plottingAreaWidth = plottingAreaRect.bottom - plottingAreaRect.top;
-		
-
-		/*AllocConsole();
-		freopen("CONOUT$", "w", stdout);
-		printf("i的值为%d 和 %d\n", plottingAreaLength,plottingAreaWidth);
-		FreeConsole();*/
 
 		if (XrangeLeft == 0 && XrangeRight == 0
 			&& YrangeTop == 0 && YrangeBottom == 0)
@@ -760,7 +747,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			YrangeTop = plottingAreaWidth / YplottingScale / 2;
 			YrangeBottom = -YrangeTop;
 		}
-		
+
 		//XplottingScale = plottingAreaLength / (XrangeRight - XrangeLeft);
 		//YplottingScale = plottingAreaWidth / (YrangeTop - YrangeBottom);
 
@@ -790,20 +777,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			origin.y = plottingAreaRect.bottom * (YrangeTop / (YrangeTop - YrangeBottom));
 		}
-		
 
-		/*HDC hdc_bg = GetDC(button_bg);
-		HBRUSH hBrush_bg = CreateSolidBrush(RGB(0,0,0));
-		SelectObject(hdc_bg, hBrush_bg);
+		HBRUSH hBrush_bg = CreateSolidBrush(backgroundColor);
+		SelectObject(hdc, hBrush_bg);
 		RECT rect_bg;
-		GetClientRect(button_bg, &rect_bg);
-		FillRect(hdc_bg, &rect_bg, hBrush_bg);*/
+		GetClientRect(hWnd, &rect_bg);
+		FillRect(hdc, &rect_bg, hBrush_bg);
 
-		 
 		if (gridOn == TRUE)
 		{
 			HPEN hpen2 = ::CreatePen(PS_DASH, 1, gridColor);
-			HPEN hpen3 = ::CreatePen(PS_SOLID, 2, gridColor);
+			HPEN hpen3 = ::CreatePen(PS_DASH, 1, gridColor);
 			hpenOld = (HPEN)::SelectObject(hdc, hpen2);
 			INT j = 0;
 			//X轴
@@ -966,7 +950,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			DeleteObject(hpen1);
 		}
-		
+
 		if (numbersOn == TRUE)
 		{
 			HPEN hpen1 = ::CreatePen(PS_SOLID, 3, numberColor);
@@ -974,50 +958,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetTextColor(hdc, numberColor);
 			TCHAR buf[20];
 			INT j = 0;
+			INT numval = 0;
 			//X轴数字
 			for (FLOAT i = origin.x - XtickDistance * XplottingScale; i > plottingAreaRect.left;
 			i -= XtickDistance * XplottingScale)
 			{
 				j--;
+				numval -= XtickDistance;
 				if (j % XlabelInterval == 0)
 				{
-					::wsprintf(buf, L"%d", j);
+					::wsprintf(buf, L"%d", numval);
 					SetTextAlign(hdc, TA_CENTER);
 					TextOut(hdc, i - wcslen(buf) / 2, origin.y + tickMarkLength / 2, buf, ::wcslen(buf));
 				}
 			}
 			j = 0;
+			numval = 0;
 			for (FLOAT i = origin.x + XtickDistance * XplottingScale; i < plottingAreaRect.right;
 			i += XtickDistance * XplottingScale)
 			{
 				j++;
+				numval += XtickDistance;
 				if (j % XlabelInterval == 0)
 				{
-					::wsprintf(buf, L"%d", j);
+					::wsprintf(buf, L"%d", numval);
 					TextOut(hdc, i - wcslen(buf) / 2, origin.y + tickMarkLength / 2, buf, ::wcslen(buf));
 				}
 			}
 			j = 0;
+			numval = 0;
 			SetTextAlign(hdc, TA_BASELINE + TA_RIGHT);
 			//Y轴数字
 			for (FLOAT i = origin.y - YtickDistance * YplottingScale; i > plottingAreaRect.top;
 			i -= YtickDistance * YplottingScale)
 			{
 				j++;
+				numval += YtickDistance;
 				if (j % YlabelInterval == 0)
 				{
-					::wsprintf(buf, L"%d", j);
+					::wsprintf(buf, L"%d", numval);
 					TextOut(hdc, origin.x - tickMarkLength / 2 - wcslen(buf), i, buf, ::wcslen(buf));
 				}
 			}
 			j = 0;
+			numval = 0;
 			for (FLOAT i = origin.y + YtickDistance * YplottingScale; i < plottingAreaRect.bottom;
 			i += YtickDistance * YplottingScale)
 			{
 				j--;
+				numval -= YtickDistance;
 				if (j % YlabelInterval == 0)
 				{
-					::wsprintf(buf, L"%d", j);
+					::wsprintf(buf, L"%d", numval);
 					TextOut(hdc, origin.x - tickMarkLength / 2 - wcslen(buf), i, buf, ::wcslen(buf));
 				}
 			}
@@ -1037,14 +1029,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		/*HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
 		hpenOld = (HPEN)::SelectObject(hdc, hpen4);
-		plot(hdc, "x^2+3.5*x", origin, 
+		plot(hdc, "x^2+3.5*x", origin,
 			XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
-		
+
 		DeleteObject(hpen4);*/
 
 
 		SelectObject(hdc, hpenOld);
-		
+
 
 		EndPaint(hWnd, &ps);
 	}
@@ -1172,10 +1164,16 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			YrangeTop = _wtof(buf);
 			GetDlgItemText(hDlg, IDC_EDIT_Y_RANGE_BOTTOM, buf, 100);
 			YrangeBottom = _wtof(buf);
+			XplottingScale = plottingAreaRect.right / (XrangeRight - XrangeLeft);
+			YplottingScale = plottingAreaRect.bottom / (YrangeTop - YrangeBottom);
+			//XplottingScale = plottingAreaLength / (XrangeRight - XrangeLeft);
+			//YplottingScale = plottingAreaWidth / (YrangeTop - YrangeBottom);
+
 			XtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_X_TICK_DISTANCE, NULL, TRUE);
 			YtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_Y_TICK_DISTANCE, NULL, TRUE);
-			XlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_X_LABEL_INTERVAL, NULL ,TRUE);
+			XlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_X_LABEL_INTERVAL, NULL, TRUE);
 			YlabelInterval = GetDlgItemInt(hDlg, IDC_EDIT_Y_LABEL_INTERVAL, NULL, TRUE);
+
 			//f1
 			funcs.number = 0;
 			TCHAR funbuf[500];
@@ -1272,44 +1270,7 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 			InvalidateRect(hwndm, NULL, TRUE);
 			SendMessage(hwndm, WM_PAINT, NULL, NULL);
-			
 		}
-		/*else
-		{
-			HWND h = GetDlgItem(hDlg, IDC_BUTTON_BG);
-			HDC cHdc = GetDC(h);
-			HBRUSH hBrush = CreateSolidBrush(numberColor);
-			SelectObject(cHdc, hBrush);
-			RECT rect_bg;
-			GetClientRect(h, &rect_bg);
-			FillRect(cHdc, &rect_bg, hBrush);
-		}*/
-		//else if (LOWORD(wParam) == IDC_BUTTON1)
-		//{
-
-		//	TCHAR buf[255];
-		//	buf[0] = '\0';
-
-		//	OPENFILENAME ofn;
-
-		//	ZeroMemory(&ofn, sizeof(ofn));
-
-		//	ofn.lStructSize = sizeof(ofn);
-		//	ofn.hwndOwner = hDlg;
-		//	ofn.hInstance = hInst;
-		//	ofn.lpstrFile = buf;
-		//	ofn.nMaxFile = 254;
-		//	ofn.lpstrFilter = L"ALL";
-		//	ofn.nFilterIndex = 1;
-
-		//	GetSaveFileName(&ofn);
-
-		//	MessageBox(hDlg, buf, L"Text", 0);
-
-		//	::SetDlgItemInt(hDlg, IDC_EDIT3,
-		//	::GetDlgItemInt(hDlg, IDC_EDIT1, NULL, true) + ::GetDlgItemInt(hDlg, IDC_EDIT2, NULL, true),
-		//	NULL);
-		//}
 		break;
 	}
 	return (INT_PTR)FALSE;

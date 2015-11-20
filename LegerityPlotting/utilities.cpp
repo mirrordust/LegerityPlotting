@@ -7,42 +7,81 @@ using namespace std;
 void plot(HDC hdc, string expression, POINT origin,
 	float XrangeLeft, float XrangeRight, float XplottingScale, float YplottingScale)
 {
-	queue<string> rpn = postfix(expression);
-	
-	INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
-	POINT* points = new POINT[pn];
-	int pc = 0;
-
-	for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 1) // x每增长0.01绘制1个点
+	if (expression == "sin(x)")
 	{
-		LONG x = origin.x + i;
-
-		/*AllocConsole();
-		freopen("CONOUT$", "w", stdout);
-		printf("%f", i / XplottingScale);
-		FreeConsole();*/
-		
-		calres result = calculate(rpn, i / XplottingScale);
-		
-		if (result.valid)
+		INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
+		POINT* points = new POINT[pn];
+		int pc = 0;
+		for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 1) // x每增长0.01绘制1个点
 		{
-			LONG y = origin.y - result.answer * YplottingScale;
+			LONG x = origin.x + i;
+			LONG y = origin.y - sin(i / XplottingScale) * YplottingScale;
 			points[pc].x = x;
 			points[pc].y = y;
 			pc++;
 		}
-
-		//y = origin.y - tan(i / XplottingScale) * YplottingScale;
-		// 在 (x,y) 处绘制一个点
-		//SetPixel(hdc, x, y, RGB(250, 0, 0));
+		//PolylineTo画图
+		int re = Polyline(hdc, points, pc);
 	}
-	//PolylineTo画图
-	int re = Polyline(hdc, points, pc);
-	if (re == 0)
+	else if (expression == "cos(x)")
 	{
-		TCHAR buf[1000];
-		::wsprintf(buf, L"=======> %d和%d", points[10].x,points[10].y);
-		TextOut(hdc, 300, 300, buf, ::wcslen(buf));
+		INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
+		POINT* points = new POINT[pn];
+		int pc = 0;
+		for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 1) // x每增长0.01绘制1个点
+		{
+			LONG x = origin.x + i;
+			LONG y = origin.y - cos(i / XplottingScale) * YplottingScale;
+			points[pc].x = x;
+			points[pc].y = y;
+			pc++;
+		}
+		//PolylineTo画图
+		int re = Polyline(hdc, points, pc);
+	}
+	else if (expression == "log(x)")
+	{
+		INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
+		POINT* points = new POINT[pn];
+		int pc = 0;
+		for (FLOAT i = 0.00001/*XrangeLeft * XplottingScale*/; i < XrangeRight * XplottingScale; i += 1) // x每增长0.01绘制1个点
+		{
+			LONG x = origin.x + i;
+			LONG y = origin.y - log(i / XplottingScale) * YplottingScale;
+			points[pc].x = x;
+			points[pc].y = y;
+			pc++;
+		}
+		//PolylineTo画图
+		int re = Polyline(hdc, points, pc);
+	}
+	else
+	{
+		queue<string> rpn = postfix(expression);
+
+		INT pn = (XrangeRight - XrangeLeft) * XplottingScale + 2; //point number
+		POINT* points = new POINT[pn];
+		int pc = 0;
+		for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 1) // x每增长0.01绘制1个点
+		{
+			LONG x = origin.x + i;
+			calres result = calculate(rpn, i / XplottingScale);
+			if (result.valid)
+			{
+				LONG y = origin.y - result.answer * YplottingScale;
+				points[pc].x = x;
+				points[pc].y = y;
+				pc++;
+			}
+		}
+		//PolylineTo画图
+		int re = Polyline(hdc, points, pc);
+		if (re == 0)
+		{
+			TCHAR buf[1000];
+			::wsprintf(buf, L"=======>出错");
+			TextOut(hdc, 0, 0, buf, ::wcslen(buf));
+		}
 	}
 
 }

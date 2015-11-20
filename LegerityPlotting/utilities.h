@@ -39,3 +39,20 @@ BOOL SaveAsBmp(HWND hwnd, wstring &strPath);
 freopen("CONOUT$", "w", stdout);
 printf("i的值为%d 和 %d\n", plottingAreaLength,plottingAreaWidth);
 FreeConsole();*/
+
+
+/*HDC hdc_bg = GetDC(button_bg);
+HBRUSH hBrush_bg = CreateSolidBrush(RGB(0,0,0));
+SelectObject(hdc_bg, hBrush_bg);
+RECT rect_bg;
+GetClientRect(button_bg, &rect_bg);
+FillRect(hdc_bg, &rect_bg, hBrush_bg);*/
+
+
+/*HWND cHwnd = GetDlgItem(console, IDC_BUTTON_BG);
+HDC cHdc = GetDC(cHwnd);
+HBRUSH hBrush = CreateSolidBrush(numberColor);
+SelectObject(cHdc, hBrush);
+RECT rect_bg;
+GetClientRect(cHwnd, &rect_bg);
+FillRect(cHdc, &rect_bg, hBrush);*/
