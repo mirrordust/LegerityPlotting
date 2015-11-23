@@ -495,3 +495,27 @@ BOOL SaveAsBmp(HWND hwnd, wstring &strPath)
 	return TRUE;
 }
 
+// 打开文件
+BOOL OpenFile(HWND hwnd, wstring &strPath)
+{
+	wchar_t szPathName[MAX_PATH] = { 0 };
+	OPENFILENAME ofn = { OPENFILENAME_SIZE_VERSION_400 };//or  {sizeof (OPENFILENAME)}  
+	ofn.hwndOwner = hwnd;			// 拥有者句柄	
+													// 过滤器,以\0相隔: 显示名称\0过滤器\0显示名称\0过滤器\0\0
+	ofn.lpstrFilter = TEXT("CSV文件(*.csv)\0*.csv\0所有文件(*.*)\0*.*\0\0");
+	ofn.lpstrFile = szPathName;				// 存放用户选择文件的 路径及文件名 缓冲区 
+	ofn.nMaxFile = sizeof(szPathName);		// 缓冲区大小,单位为字节，至少256
+	ofn.lpstrTitle = TEXT("选择文件");		// 选择文件对话框标题  
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST /*| OFN_ALLOWMULTISELECT 允许选择多个文件*/;
+
+	BOOL bOk = GetOpenFileName(&ofn);
+	if (!bOk)
+	{
+		return FALSE;
+	}
+	/*wcout.imbue(locale("chs"));
+	wcout << L"选择文件: " << szPathName << endl;*/
+	strPath = szPathName;
+
+	return TRUE;
+}

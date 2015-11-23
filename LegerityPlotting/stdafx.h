@@ -30,3 +30,4 @@
 #include "utilities.h"
 #include <Commdlg.h>
 #include <Shlobj.h>
+#include <fstream>

@@ -30,6 +30,8 @@ BOOL SelectDir(HWND hWnd, wstring &strPath);
 
 BOOL SaveAsBmp(HWND hwnd, wstring &strPath);
 
+BOOL OpenFile(HWND hwnd, wstring &strPath);
+
 /*TCHAR buf[1000];
 ::wsprintf(buf, L"=======> %d", CW_USEDEFAULT);
 ::OutputDebugString(buf);*/

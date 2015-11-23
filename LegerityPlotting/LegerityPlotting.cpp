@@ -16,6 +16,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 HWND console;
 HWND hwndm;
 RECT plottingAreaRect;
+POINT origin;
 
 
 BOOL XaxisOn; //是否显示X轴
@@ -25,6 +26,7 @@ BOOL tickMarksOn; //是否显示刻度线
 BOOL numbersOn; //是否显示坐标轴上的数字
 
 strfunc funcs; //保存函数
+strdata impdatas; //导入csv数据
 COLORREF backgroundColor; //背景颜色
 COLORREF gridColor; //网格颜色
 COLORREF axisColor; //坐标轴颜色
@@ -280,6 +282,132 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 分析菜单选择: 
 		switch (wmId)
 		{
+		case ID_IMPORT:
+		{
+			wstring filepathname;
+			BOOL open = OpenFile(hWnd, filepathname);
+			if (open)
+			{
+				impdatas.number = 0;
+
+				ifstream in;
+				in.open(filepathname, ios_base::in);
+				std::vector<std::string> result;
+				std::string line;
+				std::string cell;
+				int point_count = 0;
+				while (std::getline(in, cell, '\n'))
+				{
+					point_count++;
+					result.push_back(cell);
+				}
+				POINT* new_points = (POINT*)malloc(sizeof(POINT) * point_count);
+				for (int j = 0; j < point_count; j++)
+				{
+					string s = result.at(j);
+					int pos = s.find(',', 0);
+					(new_points + j)->x = origin.x + atol(s.substr(0, pos).c_str()) * XplottingScale;
+					(new_points + j)->y = origin.y - atol(s.substr(pos + 1, s.length() - pos).c_str()) * YplottingScale;
+				}
+				COLORREF cr = RGB(0, 0, 0);
+				COLORREF cr_new = cscolor(hWnd, cr);
+				int index = 0;
+				//number
+				impdatas.number += 1;
+				//linecolor
+				COLORREF* crp = new COLORREF[index + 1];
+				/*int i = 0;
+				for (i = 0; i < index; i++)
+				{
+					*(crp + i) = *(impdatas.lineColor + i);
+				}*/
+				*crp = cr_new;
+				impdatas.lineColor = crp;
+				//pc
+				INT* pcp = new INT[index + 1];
+				/*for (i = 0; i < index; i++)
+				{
+					*(pcp + i) = *(impdatas.pc + i);
+				}*/
+				*pcp = point_count;
+				impdatas.pc = pcp;
+				//points
+				POINT** pnp = (POINT**)malloc(sizeof(POINT*) * (index + 1));
+				/*for (i = 0; i < index; i++)
+				{
+					*(pnp + i) = *(impdatas.points + i);
+				}*/
+				*pnp = new_points;
+				impdatas.points = pnp;
+				InvalidateRect(hwndm, NULL, TRUE);
+			}
+		}
+			break;
+		case ID_ADD_IMPORT:
+		{
+			wstring filepathname;
+			BOOL open = OpenFile(hWnd, filepathname);
+			if (open)
+			{
+				ifstream in;
+				in.open(filepathname, ios_base::in);
+				std::vector<std::string> result;
+				std::string line;
+				std::string cell;
+				int point_count = 0;
+				while (std::getline(in, cell, '\n'))
+				{
+					point_count++;
+					result.push_back(cell);
+				}
+				POINT* new_points = (POINT*)malloc(sizeof(POINT) * point_count);
+				for (int j = 0; j < point_count; j++)
+				{
+					string s = result.at(j);
+					int pos = s.find(',', 0);
+					(new_points + j)->x = origin.x + atol(s.substr(0, pos).c_str()) * XplottingScale;
+					(new_points + j)->y = origin.y - atol(s.substr(pos + 1, s.length() - pos).c_str()) * YplottingScale;
+				}
+				COLORREF cr = RGB(0, 0, 0);
+				COLORREF cr_new = cscolor(hWnd, cr);
+				int index = impdatas.number;
+				//number
+				impdatas.number += 1;
+				//linecolor
+				COLORREF* crp = new COLORREF[index + 1];
+				int i = 0;
+				for (i = 0; i < index; i++)
+				{
+					*(crp + i) = *(impdatas.lineColor + i);
+				}
+				*(crp + i) = cr_new;
+				impdatas.lineColor = crp;
+				//pc
+				INT* pcp = new INT[index + 1];
+				for (i = 0; i < index; i++)
+				{
+					*(pcp + i) = *(impdatas.pc + i);
+				}
+				*(pcp + i) = point_count;
+				impdatas.pc = pcp;
+				//points
+				POINT** pnp = (POINT**)malloc(sizeof(POINT*) * (index + 1));
+				for (i = 0; i < index; i++)
+				{
+					*(pnp + i) = *(impdatas.points + i);
+				}
+				*(pnp + i) = new_points;
+				impdatas.points = pnp;
+				InvalidateRect(hwndm, NULL, TRUE);
+			}
+		}
+			break;
+		case ID_CLEAR_IMPORT:
+		{
+			impdatas.number = 0;
+			InvalidateRect(hwndm, NULL, TRUE);
+		}
+			break;
 		case IDM_CONSOLE:
 		{
 			console = CreateDialog(hInst, MAKEINTATOM(IDD_CONSOLE), hWnd, Console);
@@ -308,7 +436,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetDlgItemInt(console, IDC_EDIT_Y_LABEL_INTERVAL, YlabelInterval, TRUE);
 
 		}
-		break;
+			break;
 		case IDM_SAVE:
 		{
 			HDC hdc = GetDC(hWnd);
@@ -425,7 +553,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MessageBox(hWnd, L"保存成功", L"提示", 0);
 			ReleaseDC(hWnd, hdc);*/
 		}
-		break;
+			break;
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
@@ -437,298 +565,44 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
+	case WM_MOUSEWHEEL:
+	{
+		SHORT zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+		FLOAT change;
+		if (zDelta > 0)
+		{
+			change = zDelta / 120;
+			XplottingScale = XplottingScale + change * 5;
+			YplottingScale = YplottingScale + change * 5;
+			printf("%f,%f\n",XplottingScale,YplottingScale);
+		}
+		else
+		{
+			change = zDelta / 120;
+			if (XplottingScale + change * 5 > 0)
+			{
+				XplottingScale = XplottingScale + change * 5;
+			}
+			if (YplottingScale + change * 5 > 0)
+			{
+				YplottingScale = YplottingScale + change * 5;
+			}
+			printf("%f,%f\n", XplottingScale, YplottingScale);
+		}
+		FLOAT Xmiddle = (XrangeRight + XrangeLeft) / 2;
+		FLOAT Ymiddle = (YrangeTop + YrangeBottom) / 2;
+		XrangeRight = Xmiddle + plottingAreaRect.right / 2 / XplottingScale;
+		XrangeLeft = Xmiddle - plottingAreaRect.right / 2 / XplottingScale;
+		YrangeTop = Ymiddle + plottingAreaRect.bottom / 2 / YplottingScale;
+		YrangeBottom = Ymiddle - plottingAreaRect.bottom / 2 / YplottingScale;
+
+		InvalidateRect(hwndm, NULL, TRUE);
+	}
+	break;
 	case WM_PAINT:
 	{
-		//RECT plottingAreaRect;
-		//INT plottingAreaLength;
-		//INT plottingAreaWidth;
-		//GetClientRect(hWnd, &plottingAreaRect);
-		//plottingAreaLength = plottingAreaRect.right - plottingAreaRect.left;
-		//plottingAreaWidth = plottingAreaRect.bottom - plottingAreaRect.top;
-
-		//HDC hdc = GetDC(hWnd);
-		//HDC hMen = CreateCompatibleDC(hdc);
-		//HBITMAP hBmp = CreateCompatibleBitmap(hdc, plottingAreaLength, plottingAreaWidth);
-		//SelectObject(hMen, hBmp);
-
-		//ReleaseDC(hWnd, hdc);
-
-		//
-		//POINT origin;
-		//
-
-		//HPEN hpen1 = ::CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-		//HPEN hpenOld = (HPEN)::SelectObject(hMen, hpen1);
-
-
-		//if (XrangeLeft == 0 && XrangeRight == 0
-		//	&& YrangeTop == 0 && YrangeBottom == 0)
-		//{//未设置X和Y的的范围，则默认
-		//	XrangeRight = plottingAreaLength / XplottingScale / 2;
-		//	XrangeLeft = -XrangeRight;
-		//	YrangeBottom = plottingAreaWidth / YplottingScale / 2;
-		//	YrangeTop = -YrangeBottom;
-		//}
-
-
-		////确定坐标原点
-		////origin.x = plottingAreaRect.right - XrangeRight * XplottingScale;
-		////origin.y = plottingAreaRect.bottom - YrangeBottom * YplottingScale;
-		//origin.x = plottingAreaLength / 2;
-		//origin.y = plottingAreaWidth / 2;
-
-		//// 开始绘图
-		////SetBkColor(hdc, backgroundColor);
-
-
-		//if (gridOn == TRUE)
-		//{
-		//	HPEN hpen2 = ::CreatePen(PS_DASH, 1, RGB(90, 90, 90));
-		//	HPEN hpen3 = ::CreatePen(PS_SOLID, 2, RGB(90, 90, 90));
-		//	hpenOld = (HPEN)::SelectObject(hMen, hpen2);
-		//	INT j = 0;
-		//	//X轴
-		//	for (FLOAT i = origin.x - XtickDistance * XplottingScale; i > plottingAreaRect.left;
-		//	i -= XtickDistance * XplottingScale)
-		//	{
-		//		j++;
-		//		if (j % XlabelInterval == 0)
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen3);
-		//			MoveToEx(hMen, i, plottingAreaRect.top, NULL);
-		//			LineTo(hMen, i, plottingAreaRect.bottom);
-		//		}
-		//		else
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen2);
-		//			MoveToEx(hMen, i, plottingAreaRect.top, NULL);
-		//			LineTo(hMen, i, plottingAreaRect.bottom);
-		//		}
-
-		//	}
-		//	j = 0;
-		//	for (FLOAT i = origin.x + XtickDistance * XplottingScale; i < plottingAreaRect.right;
-		//	i += XtickDistance * XplottingScale)
-		//	{
-		//		j++;
-		//		if (j % XlabelInterval == 0)
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen3);
-		//			MoveToEx(hMen, i, plottingAreaRect.top, NULL);
-		//			LineTo(hMen, i, plottingAreaRect.bottom);
-		//		}
-		//		else
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen2);
-		//			MoveToEx(hMen, i, plottingAreaRect.top, NULL);
-		//			LineTo(hMen, i, plottingAreaRect.bottom);
-		//		}
-		//	}
-		//	j = 0;
-		//	//Y轴
-		//	for (FLOAT i = origin.y - YtickDistance * YplottingScale; i > plottingAreaRect.top;
-		//	i -= YtickDistance * YplottingScale)
-		//	{
-		//		j++;
-		//		if (j % YlabelInterval == 0)
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen3);
-		//			MoveToEx(hMen, plottingAreaRect.left, i, NULL);
-		//			LineTo(hMen, plottingAreaRect.right, i);
-		//		}
-		//		else
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen2);
-		//			MoveToEx(hMen, plottingAreaRect.left, i, NULL);
-		//			LineTo(hMen, plottingAreaRect.right, i);
-		//		}
-		//	}
-		//	j = 0;
-		//	for (FLOAT i = origin.y + YtickDistance * YplottingScale; i < plottingAreaRect.bottom;
-		//	i += YtickDistance * YplottingScale)
-		//	{
-		//		j++;
-		//		if (j % YlabelInterval == 0)
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen3);
-		//			MoveToEx(hMen, plottingAreaRect.left, i, NULL);
-		//			LineTo(hMen, plottingAreaRect.right, i);
-		//		}
-		//		else
-		//		{
-		//			hpenOld = (HPEN)::SelectObject(hMen, hpen2);
-		//			MoveToEx(hMen, plottingAreaRect.left, i, NULL);
-		//			LineTo(hMen, plottingAreaRect.right, i);
-		//		}
-		//	}
-		//	::DeleteObject(hpen2);
-		//	::DeleteObject(hpen3);
-		//}
-		//hpenOld = (HPEN)::SelectObject(hMen, hpen1);
-
-		//if (XaxisOn == TRUE)
-		//{
-		//	MoveToEx(hMen, 0, origin.y, NULL);
-		//	LineTo(hMen, plottingAreaRect.right, origin.y);
-		//}
-		//if (YaxisOn == TRUE)
-		//{
-		//	MoveToEx(hMen, origin.x, 0, NULL);
-		//	LineTo(hMen, origin.x, plottingAreaRect.bottom);
-		//}
-
-		//if (tickMarksOn == TRUE)
-		//{
-		//	INT j = 0;
-		//	//X轴刻度线
-		//	for (FLOAT i = origin.x - XtickDistance * XplottingScale; i > plottingAreaRect.left;
-		//	i -= XtickDistance * XplottingScale)
-		//	{
-		//		j++;
-		//		if (j % XlabelInterval == 0)
-		//		{
-		//			MoveToEx(hMen, i, origin.y - tickMarkLength / 2, NULL);
-		//			LineTo(hMen, i, origin.y + tickMarkLength / 2);
-		//		}
-		//		else
-		//		{
-		//			MoveToEx(hMen, i, origin.y - tickMarkLength / 4, NULL);
-		//			LineTo(hMen, i, origin.y + tickMarkLength / 4);
-		//		}
-		//	}
-		//	j = 0;
-		//	for (FLOAT i = origin.x + XtickDistance * XplottingScale; i < plottingAreaRect.right;
-		//	i += XtickDistance * XplottingScale)
-		//	{
-		//		j++;
-		//		if (j % XlabelInterval == 0)
-		//		{
-		//			MoveToEx(hMen, i, origin.y - tickMarkLength / 2, NULL);
-		//			LineTo(hMen, i, origin.y + tickMarkLength / 2);
-		//		}
-		//		else
-		//		{
-		//			MoveToEx(hMen, i, origin.y - tickMarkLength / 4, NULL);
-		//			LineTo(hMen, i, origin.y + tickMarkLength / 4);
-		//		}
-		//	}
-		//	j = 0;
-		//	//Y轴刻度线
-		//	for (FLOAT i = origin.y - YtickDistance * YplottingScale; i > plottingAreaRect.top;
-		//	i -= YtickDistance * YplottingScale)
-		//	{
-		//		j++;
-		//		if (j % YlabelInterval == 0)
-		//		{
-		//			MoveToEx(hMen, origin.x - tickMarkLength / 2, i, NULL);
-		//			LineTo(hMen, origin.x + tickMarkLength / 2, i);
-		//		}
-		//		else
-		//		{
-		//			MoveToEx(hMen, origin.x - tickMarkLength / 4, i, NULL);
-		//			LineTo(hMen, origin.x + tickMarkLength / 4, i);
-		//		}
-		//	}
-		//	j = 0;
-		//	for (FLOAT i = origin.y + YtickDistance * YplottingScale; i < plottingAreaRect.bottom;
-		//	i += YtickDistance * YplottingScale)
-		//	{
-		//		j++;
-		//		if (j % YlabelInterval == 0)
-		//		{
-		//			MoveToEx(hMen, origin.x - tickMarkLength / 2, i, NULL);
-		//			LineTo(hMen, origin.x + tickMarkLength / 2, i);
-		//		}
-		//		else
-		//		{
-		//			MoveToEx(hMen, origin.x - tickMarkLength / 4, i, NULL);
-		//			LineTo(hMen, origin.x + tickMarkLength / 4, i);
-		//		}
-		//	}
-		//}
-
-		//if (numbersOn == TRUE)
-		//{
-		//	TCHAR buf[20];
-		//	INT j = 0;
-		//	//X轴数字
-		//	for (FLOAT i = origin.x - XtickDistance * XplottingScale; i > plottingAreaRect.left;
-		//	i -= XtickDistance * XplottingScale)
-		//	{
-		//		j--;
-		//		if (j % XlabelInterval == 0)
-		//		{
-		//			::wsprintf(buf, L"%d", j);
-		//			SetTextAlign(hMen, TA_CENTER);
-		//			TextOut(hMen, i - wcslen(buf) / 2, origin.y + tickMarkLength / 2, buf, ::wcslen(buf));
-		//		}
-		//	}
-		//	j = 0;
-		//	for (FLOAT i = origin.x + XtickDistance * XplottingScale; i < plottingAreaRect.right;
-		//	i += XtickDistance * XplottingScale)
-		//	{
-		//		j++;
-		//		if (j % XlabelInterval == 0)
-		//		{
-		//			::wsprintf(buf, L"%d", j);
-		//			TextOut(hMen, i - wcslen(buf) / 2, origin.y + tickMarkLength / 2, buf, ::wcslen(buf));
-		//		}
-		//	}
-		//	j = 0;
-		//	SetTextAlign(hMen, TA_BASELINE + TA_RIGHT);
-		//	//Y轴数字
-		//	for (FLOAT i = origin.y - YtickDistance * YplottingScale; i > plottingAreaRect.top;
-		//	i -= YtickDistance * YplottingScale)
-		//	{
-		//		j++;
-		//		if (j % YlabelInterval == 0)
-		//		{
-		//			::wsprintf(buf, L"%d", j);
-		//			TextOut(hMen, origin.x - tickMarkLength / 2 - wcslen(buf), i, buf, ::wcslen(buf));
-		//		}
-		//	}
-		//	j = 0;
-		//	for (FLOAT i = origin.y + YtickDistance * YplottingScale; i < plottingAreaRect.bottom;
-		//	i += YtickDistance * YplottingScale)
-		//	{
-		//		j--;
-		//		if (j % YlabelInterval == 0)
-		//		{
-		//			::wsprintf(buf, L"%d", j);
-		//			TextOut(hMen, origin.x - tickMarkLength / 2 - wcslen(buf), i, buf, ::wcslen(buf));
-		//		}
-		//	}
-		//}
-
-		////画函数图象
-		//HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
-		//hpenOld = (HPEN)::SelectObject(hMen, hpen4);
-		//FLOAT x, y;
-		//for (FLOAT i = XrangeLeft * XplottingScale; i < XrangeRight * XplottingScale; i += 0.01) // x每增长0.01绘制1个点
-		//{
-		//	x = origin.x + i;
-		//	y = origin.y - tan(i / XplottingScale) * YplottingScale;
-		//	// 在 (x,y) 处绘制一个点
-		//	SetPixel(hMen, x, y, RGB(250, 0, 0));
-		//}
-
-		//SelectObject(hMen, hpenOld);
-		////SelectObject(hdc, hbrOld);
-
-		//::DeleteObject(hpen1);
-		////::DeleteObject(hbr);
-
-		//PAINTSTRUCT ps;
-		//HDC hdc2 = BeginPaint(hWnd, &ps);
-
-		//// TODO: 在此处添加使用 hdc 的任何绘图代码...
-		//BitBlt(hdc, 0, 0, plottingAreaLength, plottingAreaWidth, hMen, 0, 0, SRCCOPY);
-
-		//EndPaint(hWnd, &ps);
-		//=========================================================================
 		PAINTSTRUCT ps;
 		//RECT plottingAreaRect;
-		POINT origin;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		INT plottingAreaLength;
 		INT plottingAreaWidth;
@@ -1026,6 +900,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			plot(hdc, funcs.functions[c], origin, XrangeLeft, XrangeRight, XplottingScale, YplottingScale);
 			DeleteObject(hPen);
 			c++;
+		}
+		//画导入数据
+		int impnumber = impdatas.number;
+		for (int i = 0; i < impnumber; i++)
+		{
+			HPEN hPen = CreatePen(PS_DASH, 2, impdatas.lineColor[i]);
+			hpenOld = (HPEN)SelectObject(hdc, hPen);
+			Polyline(hdc, impdatas.points[i], impdatas.pc[i]);
 		}
 		/*HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
 		hpenOld = (HPEN)::SelectObject(hdc, hpen4);

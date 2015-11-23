@@ -47,3 +47,15 @@ struct strfunc
 		number = 0;
 	}
 };
+
+struct strdata
+{
+	int number;
+	COLORREF* lineColor;
+	POINT** points;
+	INT* pc;
+	strdata()
+	{
+		number = 0;
+	}
+};
