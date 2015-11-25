@@ -14,7 +14,6 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 
 HWND console;
-HWND hwndm;
 RECT plottingAreaRect;
 POINT origin;
 
@@ -50,10 +49,10 @@ FLOAT YplottingScale; //Y比例尺（实际/逻辑）
 FLOAT tickMarkLength; //刻度线长度
 FLOAT gridSpacing; //格子间距
 
-HWND button_bg, button_gr, button_axis, button_number,
-button_gr_on, button_axis_on, button_tick_on, button_number_on,
-edit_xtick_distance, edit_ytick_distance, edit_xlabel_interval, edit_ylabel_interval,
-edit_xrange_left, edit_xrange_right, edit_yrange_top, edit_yrange_bottom;
+//HWND button_bg, button_gr, button_axis, button_number,
+//button_gr_on, button_axis_on, button_tick_on, button_number_on,
+//edit_xtick_distance, edit_ytick_distance, edit_xlabel_interval, edit_ylabel_interval,
+//edit_xrange_left, edit_xrange_right, edit_yrange_top, edit_yrange_bottom;
 
 
 // 此代码模块中包含的函数的前向声明: 
@@ -210,7 +209,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
-		hwndm = hWnd;
 		/*RECT plotAreaRect;
 		GetClientRect(hWnd, &plotAreaRect);
 		HWND label1, label2, label3, label4;
@@ -274,7 +272,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		edit_ytick_distance = CreateWindow(L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_NUMBER | WS_BORDER,
 			controlAreaLeft + 250, 140, 30, 20, hWnd, (HMENU)EDIT_YTICK_DISTANCE, hInst, NULL);*/
 
-			/*HDC hdc_bg = GetDC(button_bg);
+		/*HDC hdc_bg = GetDC(button_bg);
 			HBRUSH hBrush_bg = CreateSolidBrush(RGB(0,0,0));
 			SelectObject(hdc_bg, hBrush_bg);
 			RECT rect_bg;
@@ -345,7 +343,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}*/
 				*pnp = new_points;
 				impdatas.points = pnp;
-				InvalidateRect(hwndm, NULL, TRUE);
+				InvalidateRect(hWnd, NULL, TRUE);
 			}
 		}
 			break;
@@ -407,20 +405,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 				*(pnp + i) = new_points;
 				impdatas.points = pnp;
-				InvalidateRect(hwndm, NULL, TRUE);
+				InvalidateRect(hWnd, NULL, TRUE);
 			}
 		}
 			break;
 		case ID_CLEAR_IMPORT:
 		{
 			impdatas.number = 0;
-			InvalidateRect(hwndm, NULL, TRUE);
+			InvalidateRect(hWnd, NULL, TRUE);
 		}
 			break;
 		case IDM_CONSOLE:
 		{
-			console = CreateDialog(hInst, MAKEINTATOM(IDD_CONSOLE), hWnd, Console);
-			ShowWindow(console, SW_SHOW);
+			if (!IsWindow(console))
+			{
+				console = CreateDialog(hInst, MAKEINTATOM(IDD_CONSOLE), hWnd, Console);
+				ShowWindow(console, SW_SHOW);
+			}
 			if (gridOn == TRUE)
 				CheckDlgButton(console, IDC_GR_ON, BST_CHECKED);
 			if (XaxisOn == TRUE && YaxisOn == TRUE)
@@ -595,7 +596,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			origin.x = origin.x - (now_x_pos - pre_x_pos) / XplottingScale / 20;
 			origin.y = origin.y + (now_y_pos - pre_y_pos) / YplottingScale / 20;
 
-			InvalidateRect(hwndm, NULL, TRUE);
+			InvalidateRect(hWnd, NULL, TRUE);
 		}
 	}
 	break;
@@ -635,7 +636,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		YrangeTop = Ymiddle + plottingAreaRect.bottom / 2 / YplottingScale;
 		YrangeBottom = Ymiddle - plottingAreaRect.bottom / 2 / YplottingScale;
 
-		InvalidateRect(hwndm, NULL, TRUE);
+		InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
 	case WM_PAINT:
@@ -985,9 +986,107 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_INITDIALOG:
+	{
 		return (INT_PTR)TRUE;
+	}	
+	case WM_LBUTTONDOWN:
+	{
+		SendMessage(hDlg, WM_PAINT,NULL, NULL);
+	}
+		break;
+	case WM_MOUSEMOVE:
+	{
+		SendMessage(hDlg, WM_PAINT, NULL, NULL);
+	}
+		break;
+	case WM_PAINT:
+	{
+		static HWND thwnd;
+		static HDC thdc;
+		static HBRUSH thbrush;
+		static RECT rect_;
+		//bg
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_BG);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(backgroundColor);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//gr
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_GR);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(gridColor);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//axis
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_AXIS);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(axisColor);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//number
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_NUMBER);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(numberColor);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func1
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC1);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[0]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func2
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC2);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[1]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func3
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC3);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[2]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func4
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC4);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[3]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func5
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC5);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[4]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func6
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC6);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[5]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+		//func7
+		thwnd = GetDlgItem(hDlg, IDC_BUTTON_FUNC7);
+		thdc = GetDC(thwnd);
+		thbrush = CreateSolidBrush(funcs.lineColor[6]);
+		SelectObject(thdc, thbrush);
+		GetClientRect(thwnd, &rect_);
+		FillRect(thdc, &rect_, thbrush);
+	}
+		break;
 
 	case WM_COMMAND:
+	{
 		if (LOWORD(wParam) == IDCANCEL)
 		{
 			//EndDialog(hDlg, LOWORD(wParam));
@@ -1094,8 +1193,6 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			YrangeBottom = _wtof(buf);
 			XplottingScale = plottingAreaRect.right / (XrangeRight - XrangeLeft);
 			YplottingScale = plottingAreaRect.bottom / (YrangeTop - YrangeBottom);
-			//XplottingScale = plottingAreaLength / (XrangeRight - XrangeLeft);
-			//YplottingScale = plottingAreaWidth / (YrangeTop - YrangeBottom);
 
 			XtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_X_TICK_DISTANCE, NULL, TRUE);
 			YtickDistance = GetDlgItemInt(hDlg, IDC_EDIT_Y_TICK_DISTANCE, NULL, TRUE);
@@ -1196,9 +1293,11 @@ INT_PTR CALLBACK Console(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				funcs.number += 1;
 			}
 
-			InvalidateRect(hwndm, NULL, TRUE);
-			SendMessage(hwndm, WM_PAINT, NULL, NULL);
+			InvalidateRect(GetParent(hDlg), NULL, TRUE);
+			SendMessage(GetParent(hDlg), WM_PAINT, NULL, NULL);
 		}
+		SendMessage(hDlg, WM_PAINT, NULL, NULL);
+	}
 		break;
 	}
 	return (INT_PTR)FALSE;
