@@ -24,6 +24,11 @@ BOOL YaxisOn; //是否显示Y轴
 BOOL gridOn; //是否显示格子线
 BOOL tickMarksOn; //是否显示刻度线
 BOOL numbersOn; //是否显示坐标轴上的数字
+BOOL mouselbdown; //鼠标左键是否按下
+INT pre_x_pos; //x原来坐标
+INT pre_y_pos; //y原来坐标
+INT now_x_pos; //x现在坐标
+INT now_y_pos; //y现在坐标
 
 strfunc funcs; //保存函数
 strdata impdatas; //导入csv数据
@@ -78,6 +83,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	gridOn = TRUE; //是否显示格子线
 	tickMarksOn = TRUE; //是否显示刻度线
 	numbersOn = TRUE; //是否显示坐标轴上的数字
+	mouselbdown = FALSE;
 
 	backgroundColor = RGB(255, 255, 255); //背景颜色
 	//函数颜色
@@ -306,8 +312,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					string s = result.at(j);
 					int pos = s.find(',', 0);
-					(new_points + j)->x = origin.x + atol(s.substr(0, pos).c_str()) * XplottingScale;
-					(new_points + j)->y = origin.y - atol(s.substr(pos + 1, s.length() - pos).c_str()) * YplottingScale;
+					(new_points + j)->x = atol(s.substr(0, pos).c_str());
+					(new_points + j)->y = atol(s.substr(pos + 1, s.length() - pos).c_str());
 				}
 				COLORREF cr = RGB(0, 0, 0);
 				COLORREF cr_new = cscolor(hWnd, cr);
@@ -365,8 +371,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					string s = result.at(j);
 					int pos = s.find(',', 0);
-					(new_points + j)->x = origin.x + atol(s.substr(0, pos).c_str()) * XplottingScale;
-					(new_points + j)->y = origin.y - atol(s.substr(pos + 1, s.length() - pos).c_str()) * YplottingScale;
+					(new_points + j)->x = atol(s.substr(0, pos).c_str());
+					(new_points + j)->y = atol(s.substr(pos + 1, s.length() - pos).c_str());
+
+					/*(new_points + j)->x = origin.x + atol(s.substr(0, pos).c_str()) * XplottingScale;
+					(new_points + j)->y = origin.y - atol(s.substr(pos + 1, s.length() - pos).c_str()) * YplottingScale;*/
 				}
 				COLORREF cr = RGB(0, 0, 0);
 				COLORREF cr_new = cscolor(hWnd, cr);
@@ -563,6 +572,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
+	}
+	break;
+	case WM_LBUTTONDOWN:
+	{
+		mouselbdown = TRUE;
+		pre_x_pos = GET_X_LPARAM(lParam);
+		pre_y_pos = GET_Y_LPARAM(lParam);
+	}
+	break;
+	case WM_MOUSEMOVE:
+	{
+		if (mouselbdown)
+		{
+			now_x_pos = GET_X_LPARAM(lParam);
+			now_y_pos = GET_Y_LPARAM(lParam);
+
+			XrangeRight = XrangeRight - (now_x_pos - pre_x_pos) / XplottingScale / 20;
+			XrangeLeft = XrangeLeft - (now_x_pos - pre_x_pos) / XplottingScale / 20;
+			YrangeTop = YrangeTop + (now_y_pos - pre_y_pos) / YplottingScale / 20;
+			YrangeBottom = YrangeBottom + (now_y_pos - pre_y_pos) / YplottingScale / 20;
+			origin.x = origin.x - (now_x_pos - pre_x_pos) / XplottingScale / 20;
+			origin.y = origin.y + (now_y_pos - pre_y_pos) / YplottingScale / 20;
+
+			InvalidateRect(hwndm, NULL, TRUE);
+		}
+	}
+	break;
+	case WM_LBUTTONUP:
+	{
+		mouselbdown = FALSE;
 	}
 	break;
 	case WM_MOUSEWHEEL:
@@ -905,9 +944,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		int impnumber = impdatas.number;
 		for (int i = 0; i < impnumber; i++)
 		{
+			INT pointnum = impdatas.pc[i];
+			POINT* p = (POINT*)malloc(sizeof(POINT) * pointnum);
+			for (INT o = 0; o < pointnum; o++)
+			{
+				(p + o)->x = origin.x + (impdatas.points[i] + o)->x * XplottingScale;
+				(p + o)->y = origin.y - (impdatas.points[i] + o)->y*YplottingScale;
+			}
 			HPEN hPen = CreatePen(PS_DASH, 2, impdatas.lineColor[i]);
 			hpenOld = (HPEN)SelectObject(hdc, hPen);
-			Polyline(hdc, impdatas.points[i], impdatas.pc[i]);
+			Polyline(hdc, p, impdatas.pc[i]);
 		}
 		/*HPEN hpen4 = ::CreatePen(PS_DASH, 2, RGB(250, 0, 0));
 		hpenOld = (HPEN)::SelectObject(hdc, hpen4);
