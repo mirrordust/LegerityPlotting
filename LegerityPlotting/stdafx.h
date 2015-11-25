@@ -31,4 +31,3 @@
 #include <Commdlg.h>
 #include <Shlobj.h>
 #include <fstream>
-#include <Windowsx.h>

@@ -24,12 +24,6 @@ BOOL YaxisOn; //是否显示Y轴
 BOOL gridOn; //是否显示格子线
 BOOL tickMarksOn; //是否显示刻度线
 BOOL numbersOn; //是否显示坐标轴上的数字
-BOOL mouselbdown; //鼠标左键是否按下
-INT pre_x_pos; //x原来坐标
-INT pre_y_pos; //y原来坐标
-INT now_x_pos; //x现在坐标
-INT now_y_pos; //y现在坐标
-
 
 strfunc funcs; //保存函数
 strdata impdatas; //导入csv数据
@@ -84,7 +78,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	gridOn = TRUE; //是否显示格子线
 	tickMarksOn = TRUE; //是否显示刻度线
 	numbersOn = TRUE; //是否显示坐标轴上的数字
-	mouselbdown = FALSE; //鼠标左键是否按下
 
 	backgroundColor = RGB(255, 255, 255); //背景颜色
 	//函数颜色
@@ -572,34 +565,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
-	case WM_LBUTTONDOWN:
-	{
-		mouselbdown = TRUE;
-		pre_x_pos = GET_X_LPARAM(lParam);
-		pre_y_pos = GET_Y_LPARAM(lParam);
-	}
-		break;
-	case WM_MOUSEMOVE: 
-	{
-		if (mouselbdown)
-		{
-			now_x_pos = GET_X_LPARAM(lParam);
-			now_y_pos = GET_Y_LPARAM(lParam);
-
-			XrangeRight = XrangeRight - (now_x_pos - pre_x_pos) / XplottingScale / 5;
-			XrangeLeft = XrangeLeft - (now_x_pos - pre_x_pos) / XplottingScale / 5;
-			YrangeTop = YrangeTop + (now_y_pos - pre_y_pos) / YplottingScale / 5;
-			YrangeBottom = YrangeBottom + (now_y_pos - pre_y_pos) / YplottingScale / 5;
-
-			InvalidateRect(hwndm, NULL, TRUE);
-		}
-	}
-		break;
-	case WM_LBUTTONUP:
-	{
-		mouselbdown = FALSE;
-	}
-		break;
 	case WM_MOUSEWHEEL:
 	{
 		SHORT zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
